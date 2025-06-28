@@ -4,14 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "npm run migrate:build && next build",
     "start": "next start",
     "lint": "next lint",
+    "migrate:build": "node scripts/build-migrate.js",
+    "migrate:manual": "curl -X GET \"$VERCEL_URL/api/migrate\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\"",
     "db:start": "npx supabase start",
     "db:stop": "npx supabase stop",
     "db:reset": "npx supabase db reset",
     "db:migrate": "npx supabase db push",
-    "db:seed": "npx supabase db seed"
+    "db:seed": "npx supabase db seed",
+    "db:setup": "node scripts/supabase-migrate.js"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.10.0",
@@ -19,6 +22,7 @@
     "@supabase/supabase-js": "^2.50.2",
     "dotenv": "^17.0.0",
     "next": "15.3.4",
+    "pg": "^8.16.3",
     "react": "^19.0.0",
     "react-aria-components": "^1.10.1",
     "react-dom": "^19.0.0"
