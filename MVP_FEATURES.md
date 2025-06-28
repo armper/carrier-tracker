@@ -142,7 +142,7 @@ ALTER TABLE saved_carriers ADD COLUMN last_contacted DATE;
 
 - [x] Enhanced Search & Filtering
 - [x] Carrier Detail Page  
-- [ ] Export Saved Carriers
+- [x] Export Saved Carriers
 - [ ] Basic Alerts System
 - [ ] Carrier Notes & Tags
 - [ ] Search History

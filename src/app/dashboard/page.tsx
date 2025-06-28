@@ -25,9 +25,15 @@ export default async function DashboardPage() {
         dot_number,
         legal_name,
         dba_name,
+        physical_address,
+        phone,
         safety_rating,
         insurance_status,
-        authority_status
+        authority_status,
+        carb_compliance,
+        state,
+        city,
+        vehicle_count
       )
     `)
     .eq('user_id', user.id)

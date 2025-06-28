@@ -1,17 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { exportToCSV, exportToExcel, exportToPDF } from '@/lib/export-utils'
 
 interface Carrier {
   id: string
   dot_number: string
   legal_name: string
   dba_name: string | null
+  physical_address: string | null
+  phone: string | null
   safety_rating: string
   insurance_status: string
   authority_status: string
+  carb_compliance: boolean
+  state: string | null
+  city: string | null
+  vehicle_count: number | null
 }
 
 interface SavedCarrier {
@@ -33,8 +40,24 @@ interface Props {
 
 export default function DashboardClient({ user, savedCarriers }: Props) {
   const [carriers, setCarriers] = useState<SavedCarrier[]>(savedCarriers)
+  const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsExportDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -87,13 +110,66 @@ export default function DashboardClient({ user, savedCarriers }: Props) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Your Saved Carriers</h2>
-            <button
-              onClick={() => router.push('/search')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              Search Carriers
-            </button>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Your Saved Carriers {carriers.length > 0 && <span className="text-sm font-normal text-gray-600">({carriers.length})</span>}
+            </h2>
+            <div className="flex gap-3">
+              {carriers.length > 0 && (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {isExportDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            exportToCSV(carriers);
+                            setIsExportDropdownOpen(false);
+                          }}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                        >
+                          📄 Export as CSV
+                        </button>
+                        <button
+                          onClick={() => {
+                            exportToExcel(carriers);
+                            setIsExportDropdownOpen(false);
+                          }}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                        >
+                          📊 Export as Excel
+                        </button>
+                        <button
+                          onClick={() => {
+                            exportToPDF(carriers);
+                            setIsExportDropdownOpen(false);
+                          }}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                        >
+                          📋 Export as PDF
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              <button
+                onClick={() => router.push('/search')}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Search Carriers
+              </button>
+            </div>
           </div>
 
           {carriers.length === 0 ? (
