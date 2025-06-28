@@ -67,7 +67,7 @@ export default function SearchPage() {
         }
 
         // Load recent searches
-        const { data: recentSearchData, error: recentError } = await supabase
+        const { data: recentSearchData } = await supabase
           .from('search_history')
           .select('id, query, filters, results_count, created_at')
           .eq('user_id', user.id)
@@ -80,7 +80,7 @@ export default function SearchPage() {
       }
 
       // Load popular searches (available to all users)
-      const { data: popularSearchData, error: popularError } = await supabase
+      const { data: popularSearchData } = await supabase
         .from('popular_searches')
         .select('query, search_count')
         .limit(8)
