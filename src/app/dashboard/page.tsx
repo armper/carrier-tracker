@@ -38,6 +38,16 @@ export default async function DashboardPage() {
     `)
     .eq('user_id', user.id)
 
+  // Fetch user's active alerts to show which carriers have monitoring
+  const { data: alerts } = await supabase
+    .from('monitoring_alerts')
+    .select('carrier_id')
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+
+  // Create a set of carrier IDs that have active alerts for quick lookup
+  const alertedCarrierIds = new Set((alerts || []).map(alert => alert.carrier_id))
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return <DashboardClient user={user} savedCarriers={savedCarriers as any || []} />
+  return <DashboardClient user={user} savedCarriers={savedCarriers as any || []} alertedCarrierIds={alertedCarrierIds} />
 }

@@ -37,9 +37,10 @@ interface User {
 interface Props {
   user: User
   savedCarriers: SavedCarrier[]
+  alertedCarrierIds: Set<string>
 }
 
-export default function DashboardClient({ user, savedCarriers }: Props) {
+export default function DashboardClient({ user, savedCarriers, alertedCarrierIds }: Props) {
   const [carriers, setCarriers] = useState<SavedCarrier[]>(savedCarriers)
   const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false)
   const router = useRouter()
@@ -205,14 +206,33 @@ export default function DashboardClient({ user, savedCarriers }: Props) {
                 return (
                   <div key={savedCarrier.id} className="bg-white rounded-lg shadow-md p-6">
                     <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {carrier.legal_name}
-                        </h3>
-                        {carrier.dba_name && (
-                          <p className="text-sm text-gray-600">DBA: {carrier.dba_name}</p>
-                        )}
-                        <p className="text-sm text-gray-600">DOT: {carrier.dot_number}</p>
+                      <div className="flex items-start gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {carrier.legal_name}
+                            </h3>
+                            {alertedCarrierIds.has(carrier.id) && (
+                              <div className="flex items-center gap-1">
+                                <div className="relative">
+                                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
+                                    <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                      <path d="M10 2L13.09 8.26L20 9L15 14L16.18 21L10 17.77L3.82 21L5 14L0 9L6.91 8.26L10 2Z"/>
+                                    </svg>
+                                  </div>
+                                  <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+                                </div>
+                                <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                                  Monitored
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          {carrier.dba_name && (
+                            <p className="text-sm text-gray-600">DBA: {carrier.dba_name}</p>
+                          )}
+                          <p className="text-sm text-gray-600">DOT: {carrier.dot_number}</p>
+                        </div>
                       </div>
                       <button
                         onClick={() => handleRemoveCarrier(savedCarrier.id)}
