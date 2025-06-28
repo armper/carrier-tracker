@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend only if API key is available (prevents build errors)
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 interface CarrierChange {
   carrierName: string;
@@ -18,7 +19,7 @@ interface AlertEmailData {
 }
 
 export async function sendCarrierAlertEmail(data: AlertEmailData) {
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY || !resend) {
     console.log('No Resend API key configured - skipping email send');
     return { success: false, error: 'Email service not configured' };
   }
@@ -138,7 +139,7 @@ interface CarrierSummary {
 }
 
 export async function sendWeeklyDigestEmail(userEmail: string, userName: string, carrierSummary: CarrierSummary[]) {
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY || !resend) {
     console.log('No Resend API key configured - skipping weekly digest');
     return { success: false, error: 'Email service not configured' };
   }

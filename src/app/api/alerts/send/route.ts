@@ -52,9 +52,9 @@ export async function POST(request: NextRequest) {
 
     const simulatedChanges = [
       {
-        carrierId: alerts[0]?.carriers?.id,
-        carrierName: alerts[0]?.carriers?.legal_name || 'Test Carrier',
-        dotNumber: alerts[0]?.carriers?.dot_number || '123456',
+        carrierId: 'test-id',
+        carrierName: 'Test Carrier',
+        dotNumber: '123456',
         field: 'Safety Rating',
         oldValue: 'Conditional',
         newValue: 'Satisfactory',
@@ -62,28 +62,28 @@ export async function POST(request: NextRequest) {
       }
     ]
 
-    // Group alerts by user and send emails
+    // Group alerts by user and send emails  
     const userAlerts = new Map()
     
-    alerts.forEach((alert: {
-      user_id: string;
-      profiles: { email: string; full_name: string } | null;
-      carriers: { id: string; legal_name: string; dot_number: string } | null;
-    }) => {
-      if (!alert.profiles?.email) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    alerts.forEach((alert: any) => {
+      const profile = Array.isArray(alert.profiles) ? alert.profiles[0] : alert.profiles
+      const carrier = Array.isArray(alert.carriers) ? alert.carriers[0] : alert.carriers
+      
+      if (!profile?.email) return
       
       const userId = alert.user_id
       if (!userAlerts.has(userId)) {
         userAlerts.set(userId, {
-          userEmail: alert.profiles.email,
-          userName: alert.profiles.full_name || alert.profiles.email.split('@')[0],
+          userEmail: profile.email,
+          userName: profile.full_name || profile.email.split('@')[0],
           changes: []
         })
       }
       
       // Check if this alert type matches any simulated changes
       const relevantChanges = simulatedChanges.filter(change => 
-        change.carrierId === alert.carriers?.id
+        change.carrierId === carrier?.id
       )
       
       if (relevantChanges.length > 0) {

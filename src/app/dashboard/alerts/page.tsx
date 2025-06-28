@@ -41,11 +41,23 @@ export default async function AlertsPage() {
     `)
     .eq('user_id', user.id)
 
+  // Transform alerts data to match client interface
+  const transformedAlerts = (alerts || []).map(alert => ({
+    ...alert,
+    carriers: Array.isArray(alert.carriers) ? alert.carriers[0] : alert.carriers
+  }))
+
+  // Transform savedCarriers data to match client interface
+  const transformedSavedCarriers = (savedCarriers || []).map(saved => ({
+    ...saved,
+    carriers: Array.isArray(saved.carriers) ? saved.carriers[0] : saved.carriers
+  }))
+
   return (
     <AlertsClient 
       user={user} 
-      alerts={alerts || []} 
-      savedCarriers={savedCarriers || []} 
+      alerts={transformedAlerts} 
+      savedCarriers={transformedSavedCarriers} 
     />
   )
 }

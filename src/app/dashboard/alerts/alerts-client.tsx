@@ -79,7 +79,12 @@ export default function AlertsClient({ user, alerts, savedCarriers }: Props) {
       .single()
 
     if (!error && data) {
-      setUserAlerts([...userAlerts, data])
+      // Transform the data to match our Alert interface
+      const alertWithCarrier = {
+        ...data,
+        carriers: Array.isArray(data.carriers) ? data.carriers[0] : data.carriers
+      }
+      setUserAlerts([...userAlerts, alertWithCarrier])
       setNewAlert({ carrierId: '', alertType: '' })
       setIsCreating(false)
     } else {
