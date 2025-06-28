@@ -310,9 +310,12 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
                       <div className="flex items-start gap-3">
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-semibold text-gray-900">
+                            <Link 
+                              href={`/carrier/${carrier.dot_number}`}
+                              className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer"
+                            >
                               {carrier.legal_name}
-                            </h3>
+                            </Link>
                             {alertedCarrierIds.has(carrier.id) && (
                               <div className="flex items-center gap-1">
                                 <div className="relative">

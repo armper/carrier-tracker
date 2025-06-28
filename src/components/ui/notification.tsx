@@ -84,7 +84,7 @@ function NotificationContainer({
 }) {
   return (
     <div
-      className="fixed top-4 right-4 left-4 sm:left-auto sm:max-w-md z-50 space-y-3"
+      className="fixed top-4 right-4 left-4 sm:left-auto sm:w-96 sm:max-w-lg z-50 space-y-3"
       role="region"
       aria-label="Notifications"
     >
