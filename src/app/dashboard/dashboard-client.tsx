@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { exportToCSV, exportToExcel, exportToPDF } from '@/lib/export-utils'
+import { useNotifications } from '@/components/ui/notification'
 
 interface Carrier {
   id: string
@@ -43,9 +44,13 @@ interface Props {
 export default function DashboardClient({ user, savedCarriers, alertedCarrierIds }: Props) {
   const [carriers, setCarriers] = useState<SavedCarrier[]>(savedCarriers)
   const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [carrierToDelete, setCarrierToDelete] = useState<{ id: string, name: string, alertCount: number } | null>(null)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const router = useRouter()
   const supabase = createClient()
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const { addNotification } = useNotifications()
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -67,14 +72,110 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
   }
 
   const handleRemoveCarrier = async (savedCarrierId: string) => {
-    const { error } = await supabase
-      .from('saved_carriers')
-      .delete()
-      .eq('id', savedCarrierId)
+    const carrier = carriers.find(c => c.id === savedCarrierId)
+    if (!carrier) return
 
-    if (!error) {
-      setCarriers(carriers.filter(c => c.id !== savedCarrierId))
+    // Check if this carrier has any active alerts
+    const { data: alerts, error: alertsError } = await supabase
+      .from('monitoring_alerts')
+      .select('id')
+      .eq('carrier_id', carrier.carriers.id)
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+
+    if (alertsError) {
+      addNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to check for alerts. Please try again.'
+      })
+      return
     }
+
+    const alertCount = alerts?.length || 0
+
+    if (alertCount > 0) {
+      // Show confirmation modal for carriers with alerts
+      setCarrierToDelete({
+        id: savedCarrierId,
+        name: carrier.carriers.legal_name,
+        alertCount
+      })
+      setShowDeleteModal(true)
+      setDeleteConfirmText('')
+    } else {
+      // Fast deletion for carriers without alerts
+      await performCarrierDeletion(savedCarrierId, [])
+    }
+  }
+
+  const performCarrierDeletion = async (savedCarrierId: string, alertIds: string[]) => {
+    const carrier = carriers.find(c => c.id === savedCarrierId)
+    if (!carrier) return
+
+    try {
+      // Delete alerts first if any exist
+      if (alertIds.length > 0) {
+        const { error: alertsError } = await supabase
+          .from('monitoring_alerts')
+          .delete()
+          .eq('carrier_id', carrier.carriers.id)
+          .eq('user_id', user.id)
+
+        if (alertsError) throw alertsError
+      }
+
+      // Delete the saved carrier
+      const { error } = await supabase
+        .from('saved_carriers')
+        .delete()
+        .eq('id', savedCarrierId)
+
+      if (error) throw error
+
+      // Update UI
+      setCarriers(carriers.filter(c => c.id !== savedCarrierId))
+      
+      // Show success notification
+      addNotification({
+        type: 'success',
+        title: 'Carrier Removed',
+        message: alertIds.length > 0 
+          ? `${carrier.carriers.legal_name} and ${alertIds.length} alert${alertIds.length > 1 ? 's' : ''} removed.`
+          : `${carrier.carriers.legal_name} removed from your dashboard.`
+      })
+
+      // Close modal if open
+      setShowDeleteModal(false)
+      setCarrierToDelete(null)
+      setDeleteConfirmText('')
+
+    } catch (error) {
+      console.error('Delete error:', error)
+      addNotification({
+        type: 'error',
+        title: 'Delete Failed',
+        message: 'Failed to remove carrier. Please try again.'
+      })
+    }
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!carrierToDelete || deleteConfirmText.toLowerCase() !== 'delete') return
+
+    const carrier = carriers.find(c => c.id === carrierToDelete.id)
+    if (!carrier) return
+
+    // Get alert IDs for deletion
+    const { data: alerts } = await supabase
+      .from('monitoring_alerts')
+      .select('id')
+      .eq('carrier_id', carrier.carriers.id)
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+
+    const alertIds = alerts?.map(alert => alert.id) || []
+    await performCarrierDeletion(carrierToDelete.id, alertIds)
   }
 
   const getSafetyRatingColor = (rating: string) => {
@@ -282,6 +383,77 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
           )}
         </div>
       </main>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && carrierToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Delete Carrier & Alerts</h3>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-700 mb-3">
+                You&apos;re about to remove <strong>{carrierToDelete.name}</strong> from your dashboard.
+              </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-amber-500 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-amber-800">
+                      This carrier has {carrierToDelete.alertCount} active alert{carrierToDelete.alertCount > 1 ? 's' : ''}
+                    </p>
+                    <p className="text-sm text-amber-700 mt-1">
+                      All alerts will also be permanently deleted and cannot be recovered.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Type <strong>&quot;delete&quot;</strong> to confirm:
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="Type 'delete' to confirm"
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setCarrierToDelete(null)
+                  setDeleteConfirmText('')
+                }}
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleteConfirmText.toLowerCase() !== 'delete'}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
+              >
+                Delete Carrier & Alerts
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
