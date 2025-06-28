@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
 import SearchFilters from '@/components/SearchFilters'
 import CarrierCard from '@/components/CarrierCard'
+import { useNotifications } from '@/components/ui/notification'
 
 interface Carrier {
   id: string
@@ -36,6 +37,7 @@ export default function SearchPage() {
   })
 
   const supabase = createClient()
+  const { addNotification } = useNotifications()
 
   const performSearch = async () => {
     setLoading(true)
@@ -102,7 +104,11 @@ export default function SearchPage() {
       
       if (authError) {
         console.error('Auth error:', authError)
-        alert('❌ Authentication error. Please try logging in again.')
+        addNotification({
+          type: 'error',
+          title: 'Authentication Error',
+          message: 'Please try logging in again.'
+        })
         setSavingCarrier(null)
         return
       }
@@ -131,13 +137,21 @@ export default function SearchPage() {
 
         if (createError) {
           console.error('Failed to create profile:', createError)
-          alert('❌ Failed to create user profile. Please try again.')
+          addNotification({
+            type: 'error',
+            title: 'Profile Creation Failed',
+            message: 'Please try again or contact support.'
+          })
           setSavingCarrier(null)
           return
         }
       } else if (profileError) {
         console.error('Profile error:', profileError)
-        alert('❌ Error checking user profile. Please try again.')
+        addNotification({
+          type: 'error',
+          title: 'Profile Error',
+          message: 'Error checking user profile. Please try again.'
+        })
         setSavingCarrier(null)
         return
       }
@@ -150,19 +164,39 @@ export default function SearchPage() {
         })
 
       if (!error) {
-        alert('✅ Carrier saved to your dashboard!')
+        addNotification({
+          type: 'success',
+          title: 'Carrier Saved!',
+          message: 'Carrier successfully added to your dashboard.'
+        })
       } else if (error.code === '23505') {
-        alert('ℹ️ This carrier is already in your saved list!')
+        addNotification({
+          type: 'info',
+          title: 'Already Saved',
+          message: 'This carrier is already in your saved list.'
+        })
       } else if (error.code === '23503') {
         console.error('Foreign key violation:', error)
-        alert('❌ Data error. Please refresh the page and try again.')
+        addNotification({
+          type: 'error',
+          title: 'Data Error',
+          message: 'Please refresh the page and try again.'
+        })
       } else {
         console.error('Save carrier error:', error)
-        alert(`❌ Error: ${error.message}`)
+        addNotification({
+          type: 'error',
+          title: 'Save Failed',
+          message: error.message || 'Unknown error occurred.'
+        })
       }
     } catch (err) {
       console.error('Unexpected error:', err)
-      alert('❌ Unexpected error occurred')
+      addNotification({
+        type: 'error',
+        title: 'Unexpected Error',
+        message: 'Something went wrong. Please try again.'
+      })
     }
 
     setSavingCarrier(null)

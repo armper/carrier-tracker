@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
+import { useNotifications } from '@/components/ui/notification'
 
 interface Carrier {
   id: string
@@ -50,6 +51,7 @@ export default function AlertsClient({ user, alerts, savedCarriers }: Props) {
   })
   const [loading, setLoading] = useState<string | null>(null)
   const supabase = createClient()
+  const { addNotification } = useNotifications()
 
   const handleCreateAlert = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -87,8 +89,17 @@ export default function AlertsClient({ user, alerts, savedCarriers }: Props) {
       setUserAlerts([...userAlerts, alertWithCarrier])
       setNewAlert({ carrierId: '', alertType: '' })
       setIsCreating(false)
+      addNotification({
+        type: 'success',
+        title: 'Alert Created!',
+        message: 'You will receive notifications for this carrier.'
+      })
     } else {
-      alert('Error creating alert. Please try again.')
+      addNotification({
+        type: 'error',
+        title: 'Alert Creation Failed',
+        message: 'Please try again or check your settings.'
+      })
     }
 
     setLoading(null)
@@ -108,15 +119,24 @@ export default function AlertsClient({ user, alerts, savedCarriers }: Props) {
           ? { ...alert, is_active: !isActive }
           : alert
       ))
+      addNotification({
+        type: 'success',
+        title: `Alert ${!isActive ? 'Enabled' : 'Disabled'}`,
+        message: `Monitoring has been ${!isActive ? 'turned on' : 'turned off'} for this carrier.`
+      })
     } else {
-      alert('Error updating alert. Please try again.')
+      addNotification({
+        type: 'error',
+        title: 'Update Failed',
+        message: 'Error updating alert. Please try again.'
+      })
     }
 
     setLoading(null)
   }
 
   const handleDeleteAlert = async (alertId: string) => {
-    if (!confirm('Are you sure you want to delete this alert?')) return
+    if (!window.confirm('Are you sure you want to delete this alert? This action cannot be undone.')) return
 
     setLoading(alertId)
 
@@ -127,8 +147,17 @@ export default function AlertsClient({ user, alerts, savedCarriers }: Props) {
 
     if (!error) {
       setUserAlerts(userAlerts.filter(alert => alert.id !== alertId))
+      addNotification({
+        type: 'success',
+        title: 'Alert Deleted',
+        message: 'Alert has been removed successfully.'
+      })
     } else {
-      alert('Error deleting alert. Please try again.')
+      addNotification({
+        type: 'error',
+        title: 'Delete Failed',
+        message: 'Error deleting alert. Please try again.'
+      })
     }
 
     setLoading(null)
