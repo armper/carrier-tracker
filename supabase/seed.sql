@@ -1,14 +1,63 @@
 -- Sample data for development
 
 -- Insert sample carrier data
-insert into public.carriers (dot_number, legal_name, dba_name, physical_address, phone, safety_rating, insurance_status, authority_status, carb_compliance) values
-('123456', 'ABC Transport LLC', 'ABC Express', '123 Main St, Dallas, TX 75201', '(555) 123-4567', 'Satisfactory', 'Active', 'Active', true),
-('789012', 'XYZ Logistics Inc', 'XYZ Freight', '456 Oak Ave, Los Angeles, CA 90210', '(555) 987-6543', 'Satisfactory', 'Active', 'Active', true),
-('345678', 'Swift Carriers Corp', null, '789 Pine Rd, Chicago, IL 60601', '(555) 456-7890', 'Conditional', 'Active', 'Active', false),
-('901234', 'Reliable Trucking LLC', 'Reliable Express', '321 Elm St, Miami, FL 33101', '(555) 234-5678', 'Satisfactory', 'Active', 'Active', true),
-('567890', 'National Freight Co', null, '654 Maple Dr, Phoenix, AZ 85001', '(555) 345-6789', 'Unsatisfactory', 'Inactive', 'Active', false),
-('112233', 'Mountain Express Logistics', 'Mountain Express', '890 Summit Dr, Denver, CO 80201', '(555) 111-2233', 'Satisfactory', 'Active', 'Active', true),
-('445566', 'Coastal Freight Services', null, '567 Harbor Blvd, San Francisco, CA 94102', '(555) 444-5566', 'Satisfactory', 'Active', 'Active', true),
-('778899', 'Midwest Haulers Inc', 'Midwest Express', '234 Prairie Ave, Kansas City, MO 64111', '(555) 777-8899', 'Conditional', 'Active', 'Revoked', false),
-('998877', 'Southern Transport Co', 'Southern Logistics', '345 Magnolia St, Atlanta, GA 30309', '(555) 998-8877', 'Satisfactory', 'Active', 'Active', true),
-('556644', 'Interstate Carriers LLC', null, '678 Highway 1, Las Vegas, NV 89101', '(555) 556-6644', 'Unsatisfactory', 'Inactive', 'Active', false);
+-- Update existing carriers with new search fields
+UPDATE public.carriers SET 
+  state = 'TX', 
+  city = 'Dallas', 
+  vehicle_count = 25 
+WHERE dot_number = '123456';
+
+UPDATE public.carriers SET 
+  state = 'CA', 
+  city = 'Los Angeles', 
+  vehicle_count = 42 
+WHERE dot_number = '789012';
+
+UPDATE public.carriers SET 
+  state = 'IL', 
+  city = 'Chicago', 
+  vehicle_count = 18 
+WHERE dot_number = '345678';
+
+UPDATE public.carriers SET 
+  state = 'FL', 
+  city = 'Miami', 
+  vehicle_count = 35 
+WHERE dot_number = '901234';
+
+UPDATE public.carriers SET 
+  state = 'AZ', 
+  city = 'Phoenix', 
+  vehicle_count = 8 
+WHERE dot_number = '567890';
+
+UPDATE public.carriers SET 
+  state = 'CO', 
+  city = 'Denver', 
+  vehicle_count = 52 
+WHERE dot_number = '112233';
+
+UPDATE public.carriers SET 
+  state = 'CA', 
+  city = 'San Francisco', 
+  vehicle_count = 31 
+WHERE dot_number = '445566';
+
+UPDATE public.carriers SET 
+  state = 'MO', 
+  city = 'Kansas City', 
+  vehicle_count = 15 
+WHERE dot_number = '778899';
+
+UPDATE public.carriers SET 
+  state = 'GA', 
+  city = 'Atlanta', 
+  vehicle_count = 67 
+WHERE dot_number = '998877';
+
+UPDATE public.carriers SET 
+  state = 'NV', 
+  city = 'Las Vegas', 
+  vehicle_count = 12 
+WHERE dot_number = '556644';
