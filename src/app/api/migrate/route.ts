@@ -2,12 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { DatabaseMigrator } from '@/lib/migrate'
 
 export async function GET(request: NextRequest) {
-  // Security check - only allow in development or with proper auth
-  const authHeader = request.headers.get('authorization')
-  const expectedToken = process.env.MIGRATION_TOKEN || process.env.SUPABASE_SERVICE_ROLE_KEY
+  // Simple token-based auth for migration endpoint
+  const { searchParams } = new URL(request.url)
+  const token = searchParams.get('token') || request.headers.get('authorization')?.replace('Bearer ', '')
+  const expectedToken = process.env.SUPABASE_SERVICE_ROLE_KEY
   
-  if (process.env.NODE_ENV === 'production' && authHeader !== `Bearer ${expectedToken}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!expectedToken) {
+    return NextResponse.json({ 
+      error: 'Migration not configured - missing SUPABASE_SERVICE_ROLE_KEY' 
+    }, { status: 500 })
+  }
+  
+  if (token !== expectedToken) {
+    return NextResponse.json({ 
+      error: 'Unauthorized - provide valid token as ?token= or Authorization header' 
+    }, { status: 401 })
   }
 
   try {
