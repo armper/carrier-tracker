@@ -1,17 +1,74 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase'
+import Link from 'next/link'
+
+interface User {
+  id: string
+  email?: string
+}
+
 export default function Home() {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      setLoading(false)
+    }
+    getUser()
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase.auth])
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-            <h1 className="text-2xl font-bold text-gray-900">CarrierTracker</h1>
-            <div className="flex gap-4">
-              <a href="/auth/login" className="px-4 py-2 text-blue-600 hover:text-blue-800">
-                Sign In
-              </a>
-              <a href="/auth/signup" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                Sign Up
-              </a>
+            <Link href="/" className="text-2xl font-bold text-gray-900">CarrierTracker</Link>
+            <div className="flex gap-4 items-center">
+              {loading ? (
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-20"></div>
+                </div>
+              ) : user ? (
+                <>
+                  <span className="text-sm text-gray-600">Welcome, {user.email?.split('@')[0]}</span>
+                  <Link href="/dashboard" className="px-4 py-2 text-blue-600 hover:text-blue-800">
+                    Dashboard
+                  </Link>
+                  <Link href="/search" className="px-4 py-2 text-blue-600 hover:text-blue-800">
+                    Search
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      await supabase.auth.signOut()
+                      setUser(null)
+                    }}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/login" className="px-4 py-2 text-blue-600 hover:text-blue-800">
+                    Sign In
+                  </Link>
+                  <Link href="/auth/signup" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -36,9 +93,9 @@ export default function Home() {
                 placeholder="Enter DOT number or company name..."
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              <a href="/search" className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+              <Link href="/search" className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                 Search
-              </a>
+              </Link>
             </div>
           </div>
         </div>
