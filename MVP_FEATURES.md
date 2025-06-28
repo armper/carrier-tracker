@@ -140,8 +140,8 @@ ALTER TABLE saved_carriers ADD COLUMN last_contacted DATE;
 
 ## 🚛 Implementation Status
 
-- [ ] Enhanced Search & Filtering
-- [ ] Carrier Detail Page  
+- [x] Enhanced Search & Filtering
+- [x] Carrier Detail Page  
 - [ ] Export Saved Carriers
 - [ ] Basic Alerts System
 - [ ] Carrier Notes & Tags
