@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { exportToCSV, exportToExcel, exportToPDF } from '@/lib/export-utils'
 
 interface Carrier {
@@ -114,6 +115,15 @@ export default function DashboardClient({ user, savedCarriers }: Props) {
               Your Saved Carriers {carriers.length > 0 && <span className="text-sm font-normal text-gray-600">({carriers.length})</span>}
             </h2>
             <div className="flex gap-3">
+              <Link
+                href="/dashboard/alerts"
+                className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM12 17H7a3 3 0 01-3-3V5a3 3 0 013-3h5m0 0v5a2 2 0 002 2h5M9 9h6m-6 4h6" />
+                </svg>
+                Alerts
+              </Link>
               {carriers.length > 0 && (
                 <div className="relative" ref={dropdownRef}>
                   <button
