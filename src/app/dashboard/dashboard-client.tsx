@@ -27,10 +27,10 @@ interface SavedCarrier {
   id: string
   notes: string | null
   created_at: string
-  tags: string[]
-  priority: 'high' | 'medium' | 'low'
-  last_contacted: string | null
-  updated_at: string
+  tags?: string[]
+  priority?: 'high' | 'medium' | 'low'
+  last_contacted?: string | null
+  updated_at?: string
   carriers: Carrier
 }
 
