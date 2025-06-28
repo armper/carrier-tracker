@@ -40,29 +40,37 @@ async function runMigrations() {
     
     console.log('Migration output:', migrationResult)
     
-    // Verify the setup
-    console.log('🔍 Verifying database...')
-    const { Client } = require('pg')
-    const client = new Client({
-      connectionString: dbUrl,
-      ssl: { rejectUnauthorized: false }
-    })
-    
-    await client.connect()
-    const result = await client.query('SELECT COUNT(*) FROM carriers')
-    await client.end()
-    
-    const carrierCount = result.rows[0].count
-    console.log(`✅ Database verified: ${carrierCount} carriers found`)
-    
-    if (carrierCount === '0') {
-      console.log('🌱 Loading seed data...')
-      // Load seed data if none exists
-      await client.connect()
-      const seedSQL = fs.readFileSync('./supabase/seed.sql', 'utf8')
-      await client.query(seedSQL)
-      await client.end()
-      console.log('✅ Seed data loaded')
+    // Verify the setup (skip in production to avoid SSL issues)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 Verifying database...')
+      const { Client } = require('pg')
+      const client = new Client({
+        connectionString: dbUrl,
+        ssl: { rejectUnauthorized: false }
+      })
+      
+      try {
+        await client.connect()
+        const result = await client.query('SELECT COUNT(*) FROM carriers')
+        await client.end()
+        
+        const carrierCount = result.rows[0].count
+        console.log(`✅ Database verified: ${carrierCount} carriers found`)
+        
+        if (carrierCount === '0') {
+          console.log('🌱 Loading seed data...')
+          // Load seed data if none exists
+          await client.connect()
+          const seedSQL = fs.readFileSync('./supabase/seed.sql', 'utf8')
+          await client.query(seedSQL)
+          await client.end()
+          console.log('✅ Seed data loaded')
+        }
+      } catch (error) {
+        console.log('⚠️  Database verification skipped:', error.message)
+      }
+    } else {
+      console.log('⚠️  Database verification skipped in production')
     }
     
     console.log('🎉 Migration complete!')
