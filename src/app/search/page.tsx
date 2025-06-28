@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
 import SearchFilters from '@/components/SearchFilters'
@@ -29,6 +29,7 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
   const [savingCarrier, setSavingCarrier] = useState<string | null>(null)
+  const [savedCarrierIds, setSavedCarrierIds] = useState<Set<string>>(new Set())
   const [filters, setFilters] = useState({
     state: '',
     safetyRating: '',
@@ -38,6 +39,24 @@ export default function SearchPage() {
 
   const supabase = createClient()
   const { addNotification } = useNotifications()
+
+  // Load user's saved carriers on component mount
+  useEffect(() => {
+    const loadSavedCarriers = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: savedCarriers } = await supabase
+          .from('saved_carriers')
+          .select('carrier_id')
+          .eq('user_id', user.id)
+        
+        if (savedCarriers) {
+          setSavedCarrierIds(new Set(savedCarriers.map(sc => sc.carrier_id)))
+        }
+      }
+    }
+    loadSavedCarriers()
+  }, [supabase])
 
   const performSearch = async () => {
     setLoading(true)
@@ -169,6 +188,8 @@ export default function SearchPage() {
           title: 'Carrier Saved!',
           message: 'Carrier successfully added to your dashboard.'
         })
+        // Add to local saved carriers set
+        setSavedCarrierIds(prev => new Set([...prev, carrierId]))
       } else if (error.code === '23505') {
         addNotification({
           type: 'info',
@@ -286,6 +307,7 @@ export default function SearchPage() {
                     carrier={carrier}
                     onSave={handleSaveCarrier}
                     isSaving={savingCarrier === carrier.id}
+                    isSaved={savedCarrierIds.has(carrier.id)}
                   />
                 ))}
               </div>

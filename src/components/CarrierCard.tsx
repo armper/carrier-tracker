@@ -23,9 +23,10 @@ interface CarrierCardProps {
   onSave?: (carrierId: string) => void
   isSaving?: boolean
   showSaveButton?: boolean
+  isSaved?: boolean
 }
 
-export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton = true }: CarrierCardProps) {
+export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton = true, isSaved = false }: CarrierCardProps) {
   const getSafetyRatingColor = (rating: string) => {
     switch (rating.toLowerCase()) {
       case 'satisfactory':
@@ -102,19 +103,25 @@ export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton 
         </div>
       </Link>
       
-      {showSaveButton && onSave && (
+      {showSaveButton && (
         <div className="px-6 pb-6">
-          <button
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              onSave(carrier.id)
-            }}
-            disabled={isSaving}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 text-sm"
-          >
-            {isSaving ? 'Saving...' : 'Save to Dashboard'}
-          </button>
+          {isSaved ? (
+            <div className="w-full px-4 py-2 bg-green-100 text-green-800 rounded-md text-sm text-center font-medium">
+              ✓ Saved to Dashboard
+            </div>
+          ) : onSave ? (
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onSave(carrier.id)
+              }}
+              disabled={isSaving}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 text-sm"
+            >
+              {isSaving ? 'Saving...' : 'Save to Dashboard'}
+            </button>
+          ) : null}
         </div>
       )}
     </div>

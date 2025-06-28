@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 
 interface Carrier {
@@ -26,7 +26,28 @@ interface CarrierDetailClientProps {
 export default function CarrierDetailClient({ carrier }: CarrierDetailClientProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
+  const [isSaved, setIsSaved] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
+
+  // Check if carrier is already saved
+  useEffect(() => {
+    const checkSavedStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: savedCarrier } = await supabase
+          .from('saved_carriers')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('carrier_id', carrier.id)
+          .single()
+        
+        setIsSaved(!!savedCarrier)
+      }
+      setIsLoading(false)
+    }
+    checkSavedStatus()
+  }, [supabase, carrier.id])
 
   const getSafetyRatingColor = (rating: string) => {
     switch (rating.toLowerCase()) {
@@ -103,6 +124,7 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
 
       if (!error) {
         setSaveMessage('✅ Carrier saved to your dashboard!')
+        setIsSaved(true)
       } else if (error.code === '23505') {
         setSaveMessage('ℹ️ This carrier is already in your saved list!')
       } else if (error.code === '23503') {
@@ -235,13 +257,23 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
           <p className="text-sm text-gray-600 mb-4">
             Add this carrier to your dashboard to track changes and receive alerts.
           </p>
-          <button
-            onClick={handleSaveCarrier}
-            disabled={isSaving}
-            className="w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 font-medium"
-          >
-            {isSaving ? 'Saving...' : 'Save to Dashboard'}
-          </button>
+          {isLoading ? (
+            <div className="w-full px-4 py-3 bg-gray-100 text-gray-600 rounded-md text-center font-medium">
+              Loading...
+            </div>
+          ) : isSaved ? (
+            <div className="w-full px-4 py-3 bg-green-100 text-green-800 rounded-md text-center font-medium">
+              ✓ Saved to Dashboard
+            </div>
+          ) : (
+            <button
+              onClick={handleSaveCarrier}
+              disabled={isSaving}
+              className="w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 font-medium"
+            >
+              {isSaving ? 'Saving...' : 'Save to Dashboard'}
+            </button>
+          )}
           {saveMessage && (
             <p className="mt-3 text-sm text-center">{saveMessage}</p>
           )}

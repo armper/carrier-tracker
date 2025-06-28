@@ -20,6 +20,10 @@ export default async function DashboardPage() {
       id,
       notes,
       created_at,
+      tags,
+      priority,
+      last_contacted,
+      updated_at,
       carriers (
         id,
         dot_number,
@@ -37,6 +41,8 @@ export default async function DashboardPage() {
       )
     `)
     .eq('user_id', user.id)
+    .order('priority', { ascending: false })
+    .order('updated_at', { ascending: false })
 
   // Fetch user's active alerts to show which carriers have monitoring
   const { data: alerts } = await supabase

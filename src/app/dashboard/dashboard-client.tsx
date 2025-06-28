@@ -27,6 +27,10 @@ interface SavedCarrier {
   id: string
   notes: string | null
   created_at: string
+  tags: string[]
+  priority: 'high' | 'medium' | 'low'
+  last_contacted: string | null
+  updated_at: string
   carriers: Carrier
 }
 
@@ -47,6 +51,13 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [carrierToDelete, setCarrierToDelete] = useState<{ id: string, name: string, alertCount: number } | null>(null)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [editingCarrier, setEditingCarrier] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<{
+    notes: string
+    tags: string[]
+    priority: 'high' | 'medium' | 'low'
+    lastContacted: string
+  }>({ notes: '', tags: [], priority: 'medium', lastContacted: '' })
   const router = useRouter()
   const supabase = createClient()
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -189,6 +200,91 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
       default:
         return 'bg-gray-100 text-gray-800'
     }
+  }
+
+  const getPriorityColor = (priority: 'high' | 'medium' | 'low') => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800 border-red-200'
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'low':
+        return 'bg-green-100 text-green-800 border-green-200'
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200'
+    }
+  }
+
+  const predefinedTags = ['preferred', 'high-risk', 'new', 'reliable', 'problematic', 'verified', 'urgent', 'follow-up']
+
+  const startEditing = (savedCarrier: SavedCarrier) => {
+    setEditingCarrier(savedCarrier.id)
+    setEditForm({
+      notes: savedCarrier.notes || '',
+      tags: savedCarrier.tags || [],
+      priority: savedCarrier.priority || 'medium',
+      lastContacted: savedCarrier.last_contacted || ''
+    })
+  }
+
+  const cancelEditing = () => {
+    setEditingCarrier(null)
+    setEditForm({ notes: '', tags: [], priority: 'medium', lastContacted: '' })
+  }
+
+  const saveCarrierUpdates = async (savedCarrierId: string) => {
+    try {
+      const { error } = await supabase
+        .from('saved_carriers')
+        .update({
+          notes: editForm.notes || null,
+          tags: editForm.tags,
+          priority: editForm.priority,
+          last_contacted: editForm.lastContacted || null
+        })
+        .eq('id', savedCarrierId)
+
+      if (error) throw error
+
+      // Update local state
+      setCarriers(carriers.map(carrier => 
+        carrier.id === savedCarrierId 
+          ? { 
+              ...carrier, 
+              notes: editForm.notes || null,
+              tags: editForm.tags,
+              priority: editForm.priority,
+              last_contacted: editForm.lastContacted || null,
+              updated_at: new Date().toISOString()
+            }
+          : carrier
+      ))
+
+      addNotification({
+        type: 'success',
+        title: 'Carrier Updated',
+        message: 'Carrier information has been saved successfully.'
+      })
+
+      setEditingCarrier(null)
+    } catch (error) {
+      console.error('Update error:', error)
+      addNotification({
+        type: 'error',
+        title: 'Update Failed',
+        message: 'Failed to update carrier information. Please try again.'
+      })
+    }
+  }
+
+  const addTag = (tag: string) => {
+    if (tag && !editForm.tags.includes(tag)) {
+      setEditForm({ ...editForm, tags: [...editForm.tags, tag] })
+    }
+  }
+
+  const removeTag = (tagToRemove: string) => {
+    setEditForm({ ...editForm, tags: editForm.tags.filter(tag => tag !== tagToRemove) })
   }
 
   return (
@@ -373,12 +469,47 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
                       </div>
                     </div>
 
-                    {savedCarrier.notes && (
-                      <div className="bg-gray-50 rounded-md p-3">
-                        <span className="text-sm text-gray-600">Notes: </span>
-                        <span className="text-sm text-gray-900">{savedCarrier.notes}</span>
+                    {/* Enhanced Carrier Information */}
+                    <div className="space-y-4">
+                      {/* Priority and Tags Section */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(savedCarrier.priority || 'medium')}`}>
+                          {(savedCarrier.priority || 'medium').toUpperCase()} Priority
+                        </div>
+                        {savedCarrier.tags && savedCarrier.tags.length > 0 && (
+                          <>
+                            {savedCarrier.tags.map((tag, index) => (
+                              <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                                #{tag}
+                              </span>
+                            ))}
+                          </>
+                        )}
+                        {savedCarrier.last_contacted && (
+                          <span className="text-xs text-gray-500">
+                            Last contacted: {new Date(savedCarrier.last_contacted).toLocaleDateString()}
+                          </span>
+                        )}
                       </div>
-                    )}
+
+                      {/* Notes Section */}
+                      {savedCarrier.notes && (
+                        <div className="bg-gray-50 rounded-md p-3">
+                          <span className="text-sm text-gray-600">Notes: </span>
+                          <span className="text-sm text-gray-900">{savedCarrier.notes}</span>
+                        </div>
+                      )}
+
+                      {/* Edit Button */}
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => startEditing(savedCarrier)}
+                          className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                        >
+                          Edit Details
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )
               })}
@@ -457,6 +588,147 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
           </div>
         </div>
       )}
+
+      {/* Edit Carrier Modal */}
+      {editingCarrier && (() => {
+        const carrier = carriers.find(c => c.id === editingCarrier)
+        if (!carrier) return null
+        
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    Edit Carrier Details: {carrier.carriers.legal_name}
+                  </h3>
+                  <button
+                    onClick={cancelEditing}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Priority Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Priority Level</label>
+                    <div className="flex gap-2">
+                      {(['high', 'medium', 'low'] as const).map((priority) => (
+                        <button
+                          key={priority}
+                          onClick={() => setEditForm({ ...editForm, priority })}
+                          className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                            editForm.priority === priority
+                              ? getPriorityColor(priority)
+                              : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          {priority.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                    <div className="mb-3">
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {predefinedTags.map((tag) => (
+                          <button
+                            key={tag}
+                            onClick={() => addTag(tag)}
+                            disabled={editForm.tags.includes(tag)}
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                              editForm.tags.includes(tag)
+                                ? 'bg-blue-100 text-blue-800 cursor-not-allowed opacity-50'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            + {tag}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Add custom tag..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            const target = e.target as HTMLInputElement
+                            addTag(target.value.trim())
+                            target.value = ''
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {editForm.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
+                        >
+                          #{tag}
+                          <button
+                            onClick={() => removeTag(tag)}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                    <textarea
+                      value={editForm.notes}
+                      onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      placeholder="Add notes about this carrier..."
+                    />
+                  </div>
+
+                  {/* Last Contacted */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Contacted</label>
+                    <input
+                      type="date"
+                      value={editForm.lastContacted}
+                      onChange={(e) => setEditForm({ ...editForm, lastContacted: e.target.value })}
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Modal Actions */}
+                <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
+                  <button
+                    onClick={cancelEditing}
+                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => saveCarrierUpdates(editingCarrier)}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
