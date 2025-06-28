@@ -19,6 +19,7 @@ CarrierTracker is a carrier411 competitor - a transportation carrier monitoring 
 - `npm run db:reset` - Reset local database with all migrations
 - `npm run db:migrate` - Push migrations to remote database
 - `npm run db:seed` - Seed database with sample data
+- `npm run migrate:build` - Run migrations during Vercel build process
 
 ## Architecture
 
@@ -57,10 +58,57 @@ Uses Supabase Auth with SSR:
 - RLS policies ensure users only see their own saved carriers and alerts
 
 ### Environment Variables
-Required in `.env.local`:
+Required in `.env.local` and Vercel:
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
+- `SUPABASE_SERVICE_ROLE_KEY` - Service role key for migrations and admin operations
 - `DATABASE_URL` - Direct database connection string (for migrations)
 
 ### Database Migrations
 Stored in `supabase/migrations/` with timestamp prefixes. Use `npm run db:migrate` to apply to remote database. Local development can use `npm run db:start` and `npm run db:reset` for testing schema changes.
+
+## CI/CD Pipeline
+
+### Automated Deployment Workflow
+The project uses automated database migrations integrated with Vercel deployment:
+
+```
+Code Change → git push → GitHub → Vercel Build → Auto Migration → Deploy
+```
+
+### Migration Process
+1. **Build Phase**: `npm run build` triggers `npm run migrate:build`
+2. **Migration Script**: `scripts/vercel-migrate.js` runs during Vercel build
+3. **Schema Changes**: Applied via Supabase CLI using `DATABASE_URL`
+4. **Verification**: Database connectivity and data integrity checked
+5. **Deployment**: Next.js app deployed with updated schema
+
+### Creating New Migrations
+To add schema changes:
+```bash
+# 1. Create migration file with timestamp
+echo "ALTER TABLE carriers ADD COLUMN rating INTEGER;" > supabase/migrations/$(date +%Y%m%d%H%M%S)_add_rating.sql
+
+# 2. Test locally
+npm run db:reset
+
+# 3. Deploy (migrations run automatically)
+git add . && git commit -m "Add carrier rating field" && git push
+```
+
+### Environment Setup for CI/CD
+Ensure these environment variables are set in Vercel:
+- All database credentials (same as `.env.local`)
+- Variables must be set for Production, Preview, and Development environments
+- Access Vercel dashboard: Project Settings → Environment Variables
+
+### Migration Troubleshooting
+- Check Vercel build logs for migration output
+- Use `scripts/check-database.js` to verify database state
+- Migration API available at `/api/migrate` for manual runs
+- Fallback: Run SQL manually in Supabase SQL Editor
+
+### Project Configuration
+- **Supabase Project**: `axmnmxwjijsigiueednz`
+- **Vercel Project**: `armandos-projects-cca8df46/carrier-tracker`
+- **GitHub Repo**: `armper/carrier-tracker`
