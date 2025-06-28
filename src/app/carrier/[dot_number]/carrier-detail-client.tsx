@@ -49,32 +49,78 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
     setIsSaving(true)
     setSaveMessage('')
     
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      window.location.href = '/auth/login'
-      return
-    }
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError) {
+        console.error('Auth error:', authError)
+        setSaveMessage('❌ Authentication error. Please try logging in again.')
+        setIsSaving(false)
+        return
+      }
+      
+      if (!user) {
+        window.location.href = '/auth/login'
+        return
+      }
 
-    const { error } = await supabase
-      .from('saved_carriers')
-      .insert({
-        user_id: user.id,
-        carrier_id: carrier.id
-      })
+      // Verify user profile exists, create if it doesn't
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single()
 
-    if (!error) {
-      setSaveMessage('✅ Carrier saved to your dashboard!')
-    } else if (error.code === '23505') {
-      setSaveMessage('ℹ️ This carrier is already in your saved list!')
-    } else {
-      setSaveMessage('❌ Error saving carrier')
+      if (profileError && profileError.code === 'PGRST116') {
+        // Profile doesn't exist, create it
+        const { error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
+          })
+
+        if (createError) {
+          console.error('Failed to create profile:', createError)
+          setSaveMessage('❌ Failed to create user profile. Please try again.')
+          setIsSaving(false)
+          return
+        }
+      } else if (profileError) {
+        console.error('Profile error:', profileError)
+        setSaveMessage('❌ Error checking user profile. Please try again.')
+        setIsSaving(false)
+        return
+      }
+
+      const { error } = await supabase
+        .from('saved_carriers')
+        .insert({
+          user_id: user.id,
+          carrier_id: carrier.id
+        })
+
+      if (!error) {
+        setSaveMessage('✅ Carrier saved to your dashboard!')
+      } else if (error.code === '23505') {
+        setSaveMessage('ℹ️ This carrier is already in your saved list!')
+      } else if (error.code === '23503') {
+        console.error('Foreign key violation:', error)
+        setSaveMessage('❌ Data error. Please refresh the page and try again.')
+      } else {
+        console.error('Save carrier error:', error)
+        setSaveMessage(`❌ Error: ${error.message}`)
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err)
+      setSaveMessage('❌ Unexpected error occurred')
     }
 
     setIsSaving(false)
     
-    // Clear message after 3 seconds
-    setTimeout(() => setSaveMessage(''), 3000)
+    // Clear message after 5 seconds (longer for error messages)
+    setTimeout(() => setSaveMessage(''), 5000)
   }
 
   return (
