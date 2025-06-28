@@ -19,8 +19,10 @@ async function runBuildMigration() {
   const authToken = process.env.SUPABASE_SERVICE_ROLE_KEY
   
   if (!authToken) {
-    console.error('❌ Missing SUPABASE_SERVICE_ROLE_KEY for migration')
-    process.exit(1)
+    console.log('⚠️  SUPABASE_SERVICE_ROLE_KEY not found, skipping build-time migration')
+    console.log('🔧 Add environment variables to Vercel or run migration manually')
+    console.log('   Vercel Dashboard → Project Settings → Environment Variables')
+    process.exit(0)
   }
   
   try {
