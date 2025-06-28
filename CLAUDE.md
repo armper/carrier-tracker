@@ -112,3 +112,38 @@ Ensure these environment variables are set in Vercel:
 - **Supabase Project**: `axmnmxwjijsigiueednz`
 - **Vercel Project**: `armandos-projects-cca8df46/carrier-tracker`
 - **GitHub Repo**: `armper/carrier-tracker`
+
+### Feature Planning
+- **Feature Roadmap**: See `MVP_FEATURES.md` for prioritized feature list
+- **Current Focus**: Enhanced search and filtering (Priority #1)
+- **Implementation Status**: All features documented with technical requirements
+- **Development Order**: Impact/effort optimized for rapid MVP growth
+
+## Development Server
+
+### Background Development Server
+The dev server can be run in the background with logs piped to a temp file:
+```bash
+# Start dev server in background
+npm run dev > /tmp/carrier-tracker-dev.log 2>&1 &
+
+# Monitor logs
+tail -f /tmp/carrier-tracker-dev.log
+
+# Stop the background server
+pkill -f "next dev --turbopack"
+```
+
+### Development Log File
+- **Log Location**: `/tmp/carrier-tracker-dev.log`
+- **Purpose**: Contains Next.js development server output, compilation messages, and runtime logs
+- **Usage**: Monitor for build errors, hot reload status, and development debugging
+- **Process ID**: Can be found with `ps aux | grep "next dev" | grep -v grep`
+
+### Development Server Status
+- **Current Status**: Running in background (PID: 21174)
+- **URL**: http://localhost:3000
+- **Environment**: .env.local, .env loaded
+- **Compilation**: Middleware compiled successfully, ready in 2.1s
+- **Pages Compiled**: Home, Search, Auth (Login/Signup), Dashboard all working
+- **Log Activity**: Active compilation and request logging in progress
