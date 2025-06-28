@@ -30,6 +30,17 @@ export default function SearchPage() {
   const [searched, setSearched] = useState(false)
   const [savingCarrier, setSavingCarrier] = useState<string | null>(null)
   const [savedCarrierIds, setSavedCarrierIds] = useState<Set<string>>(new Set())
+  const [recentSearches, setRecentSearches] = useState<Array<{
+    id: string
+    query: string
+    filters: typeof filters
+    results_count: number
+    created_at: string
+  }>>([])
+  const [popularSearches, setPopularSearches] = useState<Array<{
+    query: string
+    search_count: number
+  }>>([])
   const [filters, setFilters] = useState({
     state: '',
     safetyRating: '',
@@ -40,11 +51,12 @@ export default function SearchPage() {
   const supabase = createClient()
   const { addNotification } = useNotifications()
 
-  // Load user's saved carriers on component mount
+  // Load user's saved carriers and search history on component mount
   useEffect(() => {
-    const loadSavedCarriers = async () => {
+    const loadUserData = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
+        // Load saved carriers
         const { data: savedCarriers } = await supabase
           .from('saved_carriers')
           .select('carrier_id')
@@ -53,10 +65,51 @@ export default function SearchPage() {
         if (savedCarriers) {
           setSavedCarrierIds(new Set(savedCarriers.map(sc => sc.carrier_id)))
         }
+
+        // Load recent searches
+        const { data: recentSearchData } = await supabase
+          .from('search_history')
+          .select('id, query, filters, results_count, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10)
+        
+        if (recentSearchData) {
+          setRecentSearches(recentSearchData)
+        }
+      }
+
+      // Load popular searches (available to all users)
+      const { data: popularSearchData } = await supabase
+        .from('popular_searches')
+        .select('query, search_count')
+        .limit(8)
+      
+      if (popularSearchData) {
+        setPopularSearches(popularSearchData)
       }
     }
-    loadSavedCarriers()
+    loadUserData()
   }, [supabase])
+
+  const saveSearchHistory = async (searchQuery: string, searchFilters: typeof filters, resultsCount: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user && searchQuery.trim()) {
+        await supabase
+          .from('search_history')
+          .insert({
+            user_id: user.id,
+            query: searchQuery.trim(),
+            filters: searchFilters,
+            results_count: resultsCount
+          })
+      }
+    } catch (error) {
+      // Silently fail - search history is not critical
+      console.log('Search history save failed:', error)
+    }
+  }
 
   const performSearch = async () => {
     setLoading(true)
@@ -92,6 +145,23 @@ export default function SearchPage() {
 
     if (data) {
       setCarriers(data)
+      // Save search to history and update recent searches
+      await saveSearchHistory(query, filters, data.length)
+      // Add to recent searches state (avoid duplicates)
+      if (query.trim()) {
+        setRecentSearches(prev => {
+          const newSearch = {
+            id: Date.now().toString(),
+            query: query.trim(),
+            filters,
+            results_count: data.length,
+            created_at: new Date().toISOString()
+          }
+          // Remove existing search with same query and add new one at top
+          const filtered = prev.filter(search => search.query !== query.trim())
+          return [newSearch, ...filtered].slice(0, 10)
+        })
+      }
     }
 
     setLoading(false)
@@ -113,6 +183,52 @@ export default function SearchPage() {
       insuranceStatus: '',
       sortBy: ''
     })
+  }
+
+  const handleRecentSearchClick = (search: typeof recentSearches[0]) => {
+    setQuery(search.query)
+    setFilters(search.filters)
+    // Trigger search automatically
+    performSearch()
+  }
+
+  const handlePopularSearchClick = (searchQuery: string) => {
+    setQuery(searchQuery)
+    // Clear filters for popular searches
+    setFilters({
+      state: '',
+      safetyRating: '',
+      insuranceStatus: '',
+      sortBy: ''
+    })
+    // Trigger search automatically
+    performSearch()
+  }
+
+  const clearSearchHistory = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase
+          .from('search_history')
+          .delete()
+          .eq('user_id', user.id)
+        
+        setRecentSearches([])
+        addNotification({
+          type: 'success',
+          title: 'History Cleared',
+          message: 'Your search history has been cleared.'
+        })
+      }
+    } catch (error) {
+      console.error('Clear history error:', error)
+      addNotification({
+        type: 'error',
+        title: 'Clear Failed',
+        message: 'Failed to clear search history. Please try again.'
+      })
+    }
   }
 
   const handleSaveCarrier = async (carrierId: string) => {
@@ -246,6 +362,69 @@ export default function SearchPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Search Carriers</h1>
           <p className="text-gray-600">Find and track transportation carriers by DOT number or company name</p>
         </div>
+
+        {/* Search History Section */}
+        {(recentSearches.length > 0 || popularSearches.length > 0) && !searched && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Recent Searches */}
+              {recentSearches.length > 0 && (
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-sm font-medium text-gray-900">Recent Searches</h3>
+                    <button
+                      onClick={clearSearchHistory}
+                      className="text-xs text-gray-500 hover:text-red-600"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {recentSearches.slice(0, 5).map((search) => (
+                      <button
+                        key={search.id}
+                        onClick={() => handleRecentSearchClick(search)}
+                        className="w-full text-left p-2 rounded-md hover:bg-gray-50 border border-gray-200 transition-colors"
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-900 font-medium">&ldquo;{search.query}&rdquo;</span>
+                          <span className="text-xs text-gray-500">{search.results_count} results</span>
+                        </div>
+                        {Object.values(search.filters).some(v => v !== '') && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            Filters: {Object.entries(search.filters)
+                              .filter(([, value]) => value !== '')
+                              .map(([key, value]) => `${key}: ${value}`)
+                              .join(', ')}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Popular Searches */}
+              {popularSearches.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Popular Searches</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {popularSearches.map((search, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handlePopularSearchClick(search.query)}
+                        className="px-3 py-1 text-sm bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100 transition-colors"
+                      >
+                        {search.query}
+                        <span className="ml-1 text-xs text-blue-500">({search.search_count})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <form onSubmit={handleSearch} className="space-y-6">
