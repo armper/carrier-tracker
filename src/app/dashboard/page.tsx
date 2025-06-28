@@ -32,5 +32,6 @@ export default async function DashboardPage() {
     `)
     .eq('user_id', user.id)
 
-  return <DashboardClient user={user} savedCarriers={savedCarriers || []} />
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return <DashboardClient user={user} savedCarriers={savedCarriers as any || []} />
 }

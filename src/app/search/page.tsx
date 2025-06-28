@@ -33,7 +33,7 @@ export default function SearchPage() {
     setLoading(true)
     setSearched(true)
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('carriers')
       .select('*')
       .or(`dot_number.ilike.%${query}%,legal_name.ilike.%${query}%,dba_name.ilike.%${query}%`)
