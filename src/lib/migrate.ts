@@ -2,11 +2,11 @@ import { createClient } from '@supabase/supabase-js'
 import fs from 'fs'
 import path from 'path'
 
-interface Migration {
-  id: string
-  filename: string
-  executed_at: string
-}
+// interface Migration {
+//   id: string
+//   filename: string
+//   executed_at: string
+// }
 
 export class DatabaseMigrator {
   private supabase
@@ -200,7 +200,7 @@ export async function runMigrations(): Promise<boolean> {
 }
 
 // Helper function to get executed migrations
-async function getExecutedMigrations(): Promise<string[]> {
-  const migrator = new DatabaseMigrator()
-  return await migrator.getExecutedMigrations()
-}
+// async function getExecutedMigrations(): Promise<string[]> {
+//   const migrator = new DatabaseMigrator()
+//   return await migrator.getExecutedMigrations()
+// }
