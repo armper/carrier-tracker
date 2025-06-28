@@ -7,7 +7,7 @@
     "build": "npm run migrate:build && next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate:build": "node scripts/build-migrate.js",
+    "migrate:build": "node scripts/vercel-migrate.js",
     "migrate:manual": "curl -X GET \"$VERCEL_URL/api/migrate\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\"",
     "db:start": "npx supabase start",
     "db:stop": "npx supabase stop",
