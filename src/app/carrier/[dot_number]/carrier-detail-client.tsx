@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
+import SafetyRatingTrend from '@/components/SafetyRatingTrend'
 
 interface Carrier {
   id: string
@@ -375,6 +376,9 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
             </div>
           </div>
         )}
+
+        {/* Safety Rating History */}
+        <SafetyRatingTrend carrierId={carrier.id} />
       </div>
 
       {/* Sidebar */}
