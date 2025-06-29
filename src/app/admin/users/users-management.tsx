@@ -33,7 +33,7 @@ interface Props {
   users: Profile[]
 }
 
-export default function UsersManagement({ currentUser, currentProfile, users }: Props) {
+export default function UsersManagement({ currentUser, users }: Props) {
   const [userList, setUserList] = useState<Profile[]>(users)
   const [loading, setLoading] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')

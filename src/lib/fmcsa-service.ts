@@ -199,7 +199,7 @@ export class FMCSAService {
         // Normal HTML parsing for non-JavaScript pages
         
         // Extract legal name with better patterns
-        let legalNameMatch = html.match(/Legal Name[:\s]*<[^>]*>([^<]+)</i) ||
+        const legalNameMatch = html.match(/Legal Name[:\s]*<[^>]*>([^<]+)</i) ||
                            html.match(/Legal Name[:\s]*([^<\n\r]+)/i)
         if (legalNameMatch) {
           const name = legalNameMatch[1].trim()
@@ -209,7 +209,7 @@ export class FMCSAService {
         }
 
         // Extract DBA name with better patterns
-        let dbaMatch = html.match(/DBA Name[:\s]*<[^>]*>([^<]+)</i) ||
+        const dbaMatch = html.match(/DBA Name[:\s]*<[^>]*>([^<]+)</i) ||
                       html.match(/DBA Name[:\s]*([^<\n\r]+)/i)
         if (dbaMatch) {
           const dba = dbaMatch[1].trim()
@@ -371,7 +371,7 @@ export const fmcsaService = new FMCSAService()
 
 // Export utility functions
 export function mapFMCSAToCarrierData(fmcsaData: FMCSACarrierData) {
-  return {
+  const baseData = {
     dot_number: fmcsaData.dotNumber,
     legal_name: fmcsaData.legalName,
     dba_name: fmcsaData.dbaName,
@@ -384,6 +384,18 @@ export function mapFMCSAToCarrierData(fmcsaData: FMCSACarrierData) {
     data_source: 'fmcsa',
     verified: true,
     verification_date: new Date().toISOString(),
-    trust_score: 95 // High trust score for FMCSA data
+    updated_at: new Date().toISOString()
   }
+
+  // Calculate trust score based on data quality
+  import('./trust-score').then(({ calculateTrustScore }) => {
+    const { score } = calculateTrustScore(baseData)
+    return { ...baseData, trust_score: score }
+  }).catch(() => {
+    // Fallback to default FMCSA trust score
+    return { ...baseData, trust_score: 95 }
+  })
+
+  // For now, use default FMCSA trust score until dynamic calculation is implemented
+  return { ...baseData, trust_score: 95 }
 }

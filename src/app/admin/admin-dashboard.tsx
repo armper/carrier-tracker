@@ -1,6 +1,4 @@
 'use client'
-
-import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -27,7 +25,7 @@ interface AdminActivity {
   action: string
   entity_type: string
   entity_id?: string
-  details?: any
+  details?: Record<string, unknown>
   created_at: string
   profiles?: {
     full_name?: string
@@ -209,6 +207,28 @@ export default function AdminDashboard({ user, profile, stats, recentActivities 
                 <div>
                   <p className="font-medium text-gray-900">Manage Carriers</p>
                   <p className="text-sm text-gray-600">View and edit carrier database</p>
+                </div>
+              </Link>
+
+              <Link 
+                href="/admin/reports" 
+                className="flex items-center gap-3 p-3 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors group"
+              >
+                <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center group-hover:bg-orange-700 transition-colors">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-gray-900">Review Reports</p>
+                    {stats.pendingReports > 0 && (
+                      <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                        {stats.pendingReports}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600">User-submitted data quality reports</p>
                 </div>
               </Link>
 

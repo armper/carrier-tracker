@@ -16,6 +16,9 @@ interface Carrier {
   state: string | null
   city: string | null
   vehicle_count: number | null
+  data_source?: string
+  verified?: boolean
+  trust_score?: number
 }
 
 interface CarrierCardProps {
@@ -45,9 +48,34 @@ export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton 
       <Link href={`/carrier/${carrier.dot_number}`} className="block p-6">
         <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-1 hover:text-blue-600 transition-colors">
-              {carrier.legal_name}
-            </h3>
+            <div className="flex items-center gap-3 mb-1">
+              <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                {carrier.legal_name}
+              </h3>
+              
+              {/* Data Source Badge */}
+              {carrier.data_source && (
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  carrier.data_source === 'fmcsa' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-blue-100 text-blue-800'
+                }`}>
+                  {carrier.data_source === 'fmcsa' ? '🏛️ FMCSA' : '📝 Manual'}
+                </span>
+              )}
+              
+              {/* Verification Badge */}
+              {carrier.verified !== undefined && (
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  carrier.verified 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {carrier.verified ? '✓ Verified' : '⚠️ Unverified'}
+                </span>
+              )}
+            </div>
+            
             {carrier.dba_name && (
               <p className="text-sm text-gray-600 mb-1">DBA: {carrier.dba_name}</p>
             )}
@@ -58,6 +86,16 @@ export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton 
               )}
               {carrier.vehicle_count && (
                 <span>🚛 {carrier.vehicle_count} vehicles</span>
+              )}
+              {/* Trust Score */}
+              {carrier.trust_score && (
+                <span className={`text-sm font-medium ${
+                  carrier.trust_score >= 90 ? 'text-green-600' :
+                  carrier.trust_score >= 70 ? 'text-yellow-600' :
+                  'text-red-600'
+                }`}>
+                  🛡️ {carrier.trust_score}% trust
+                </span>
               )}
             </div>
             {carrier.phone && (

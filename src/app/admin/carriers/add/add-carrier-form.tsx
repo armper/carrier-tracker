@@ -88,7 +88,7 @@ export default function AddCarrierForm({ user }: Props) {
         return false
       }
       return true
-    } catch (error) {
+    } catch {
       // No existing carrier found, which is good
       return true
     } finally {
@@ -237,11 +237,11 @@ export default function AddCarrierForm({ user }: Props) {
       if (error && typeof error === 'object') {
         console.error('Error keys:', Object.keys(error))
         console.error('Error details:', {
-          message: (error as any).message,
-          code: (error as any).code,
-          details: (error as any).details,
-          hint: (error as any).hint,
-          stack: (error as any).stack
+          message: (error as Record<string, unknown>).message,
+          code: (error as Record<string, unknown>).code,
+          details: (error as Record<string, unknown>).details,
+          hint: (error as Record<string, unknown>).hint,
+          stack: (error as Record<string, unknown>).stack
         })
       }
       

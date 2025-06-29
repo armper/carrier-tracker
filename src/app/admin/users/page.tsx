@@ -2,21 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import UsersManagement from './users-management'
 
-interface User {
-  id: string
-  email?: string
-}
 
-interface Profile {
-  id: string
-  email: string
-  full_name: string | null
-  company_name: string | null
-  is_admin: boolean
-  role: string
-  created_at: string
-  updated_at: string
-}
 
 export default async function AdminUsersPage() {
   const supabase = await createClient()
@@ -49,6 +35,16 @@ export default async function AdminUsersPage() {
     .from('profiles')
     .select('id, email, full_name, company_name, is_admin, role, created_at, updated_at')
     .order('created_at', { ascending: false })
+    .returns<Array<{
+      id: string
+      email: string
+      full_name: string | null
+      company_name: string | null
+      is_admin: boolean
+      role: string
+      created_at: string
+      updated_at: string
+    }>>()
 
   if (usersError) {
     console.error('Error fetching users:', usersError)

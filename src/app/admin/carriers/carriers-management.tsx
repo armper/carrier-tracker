@@ -27,7 +27,7 @@ export default function CarriersManagement({ initialCarriers }: Props) {
     type: 'lookup' | 'refresh'
     carrier?: Carrier
     dotNumber?: string
-    previewData?: any
+    previewData?: Record<string, unknown>
   }>({ show: false, type: 'lookup' })
   const { addNotification } = useNotifications()
 

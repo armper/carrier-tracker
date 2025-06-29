@@ -28,6 +28,13 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
   const [saveMessage, setSaveMessage] = useState('')
   const [isSaved, setIsSaved] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportData, setReportData] = useState({
+    issue_type: '',
+    description: ''
+  })
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false)
+  const [reportMessage, setReportMessage] = useState('')
   const supabase = createClient()
 
   // Check if carrier is already saved
@@ -143,6 +150,52 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
     
     // Clear message after 5 seconds (longer for error messages)
     setTimeout(() => setSaveMessage(''), 5000)
+  }
+
+  const handleReportSubmit = async () => {
+    if (!reportData.issue_type || !reportData.description.trim()) {
+      setReportMessage('❌ Please select an issue type and provide a description')
+      return
+    }
+
+    setIsSubmittingReport(true)
+    setReportMessage('')
+
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        setReportMessage('❌ Please log in to report issues')
+        setIsSubmittingReport(false)
+        return
+      }
+
+      const { error } = await supabase
+        .from('carrier_reports')
+        .insert({
+          carrier_id: carrier.id,
+          user_id: user.id,
+          issue_type: reportData.issue_type,
+          description: reportData.description.trim()
+        })
+
+      if (error) {
+        console.error('Report submission error:', error)
+        setReportMessage('❌ Failed to submit report. Please try again.')
+      } else {
+        setReportMessage('✅ Report submitted successfully! Our team will review it.')
+        setReportData({ issue_type: '', description: '' })
+        setTimeout(() => {
+          setShowReportModal(false)
+          setReportMessage('')
+        }, 2000)
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error)
+      setReportMessage('❌ Unexpected error occurred')
+    }
+
+    setIsSubmittingReport(false)
   }
 
   return (
@@ -279,6 +332,20 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
           )}
         </div>
 
+        {/* Report Issue */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Report Issue</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Found incorrect or outdated information? Help us improve data quality.
+          </p>
+          <button
+            onClick={() => setShowReportModal(true)}
+            className="w-full px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 font-medium"
+          >
+            Report Data Issue
+          </button>
+        </div>
+
         {/* Quick Stats */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
@@ -308,6 +375,80 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
           </div>
         </div>
       </div>
+
+      {/* Report Issue Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Report Data Issue</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Help us improve data quality for {carrier.legal_name}
+              </p>
+            </div>
+
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Issue Type
+                </label>
+                <select
+                  value={reportData.issue_type}
+                  onChange={(e) => setReportData(prev => ({ ...prev, issue_type: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                >
+                  <option value="">Select an issue type</option>
+                  <option value="incorrect_name">Incorrect Company Name</option>
+                  <option value="wrong_rating">Wrong Safety Rating</option>
+                  <option value="outdated_info">Outdated Information</option>
+                  <option value="incorrect_address">Incorrect Address</option>
+                  <option value="wrong_phone">Wrong Phone Number</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={reportData.description}
+                  onChange={(e) => setReportData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Please describe the issue in detail..."
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                />
+              </div>
+
+              {reportMessage && (
+                <div className="text-sm text-center p-2 rounded-md bg-gray-50">
+                  {reportMessage}
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowReportModal(false)
+                  setReportData({ issue_type: '', description: '' })
+                  setReportMessage('')
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReportSubmit}
+                disabled={isSubmittingReport}
+                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
+              >
+                {isSubmittingReport ? 'Submitting...' : 'Submit Report'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

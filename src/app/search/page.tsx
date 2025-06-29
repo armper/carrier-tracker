@@ -21,6 +21,9 @@ interface Carrier {
   state: string | null
   city: string | null
   vehicle_count: number | null
+  data_source?: string
+  verified?: boolean
+  trust_score?: number
 }
 
 export default function SearchPage() {
@@ -116,11 +119,10 @@ export default function SearchPage() {
     setSearched(true)
 
     let finalResults: Carrier[] = []
-    let searchFromFMCSA = false
 
     try {
       // First, search our local database
-      let queryBuilder = supabase.from('carriers').select('*')
+      let queryBuilder = supabase.from('carriers').select('*, data_source, verified, trust_score')
 
       // Apply text search if query exists
       if (query.trim()) {
@@ -161,7 +163,6 @@ export default function SearchPage() {
           
           if (fmcsaData.success && fmcsaData.data) {
             finalResults = [fmcsaData.data]
-            searchFromFMCSA = true
             
             // Show notification about FMCSA fetch
             addNotification({

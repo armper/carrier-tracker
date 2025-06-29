@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     const supabase = await createClient()
     
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         message: 'Migration already applied',
         status: 'skipped'
       })
-    } catch (error) {
+    } catch {
       // Column doesn't exist, proceed with migration
     }
 
