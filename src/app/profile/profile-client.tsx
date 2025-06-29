@@ -20,6 +20,8 @@ interface Profile {
   full_name: string | null
   company_name: string | null
   updated_at: string
+  is_admin: boolean
+  role: string
 }
 
 interface Props {
@@ -147,6 +149,11 @@ export default function ProfileClient({ user, profile }: Props) {
               <Link href="/search" className="px-4 py-2 text-gray-700 hover:text-gray-900">
                 Search
               </Link>
+              {profile?.is_admin && (
+                <Link href="/admin" className="px-4 py-2 text-red-600 hover:text-red-800 font-medium">
+                  Admin Panel
+                </Link>
+              )}
               <button
                 onClick={handleSignOut}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800"
@@ -268,6 +275,41 @@ export default function ProfileClient({ user, profile }: Props) {
               </div>
             )}
           </div>
+
+          {/* Admin Status Card */}
+          {profile?.is_admin && (
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Admin Access</h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900">Admin Status</h3>
+                    <p className="text-sm text-gray-500">You have administrative privileges</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                      profile.role === 'super_admin' 
+                        ? 'bg-purple-100 text-purple-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {profile.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                    </span>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-gray-200">
+                  <Link 
+                    href="/admin"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Access Admin Panel
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Password Change Card */}
           <div className="bg-white rounded-lg shadow-sm border p-6">

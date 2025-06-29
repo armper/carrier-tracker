@@ -125,9 +125,11 @@ export default function AddCarrierForm({ user }: Props) {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('=== handleSubmit called ===')
     e.preventDefault()
     
     const errors = validateForm()
+    console.log('Validation errors:', errors)
     if (errors.length > 0) {
       addNotification({
         type: 'error',
@@ -170,26 +172,55 @@ export default function AddCarrierForm({ user }: Props) {
         last_manual_update: new Date().toISOString()
       }
 
-      // Insert carrier
-      const { data: carrier, error: carrierError } = await supabase
-        .from('carriers')
-        .insert(carrierData)
-        .select()
+      // Check current user and admin status
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      console.log('Current user:', currentUser?.email, currentUser?.id)
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, email, is_admin, role')
+        .eq('id', currentUser?.id)
         .single()
+      
+      console.log('User profile:', profile)
 
-      if (carrierError) throw carrierError
+      // Insert carrier using service role for admin operations
+      console.log('Attempting to insert carrier data:', carrierData)
+      
+      // Use server-side insert for admin operations
+      const response = await fetch('/api/admin/carriers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(carrierData),
+      });
+      
+      const result = await response.json();
+      console.log('Insert result:', result);
+      
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to insert carrier');
+      }
+      
+      const carrier = result.data;
 
-      // Log admin activity
-      await supabase.rpc('log_admin_activity', {
-        p_action: 'create_carrier',
-        p_entity_type: 'carrier',
-        p_entity_id: carrier.id,
-        p_details: {
-          dot_number: carrierData.dot_number,
-          legal_name: carrierData.legal_name,
-          data_source: 'manual'
-        }
-      })
+      // Log admin activity (optional - if function exists)
+      try {
+        await supabase.rpc('log_admin_activity', {
+          p_action: 'create_carrier',
+          p_entity_type: 'carrier',
+          p_entity_id: carrier.id,
+          p_details: {
+            dot_number: carrierData.dot_number,
+            legal_name: carrierData.legal_name,
+            data_source: 'manual'
+          }
+        })
+      } catch (activityError) {
+        console.warn('Admin activity logging failed:', activityError)
+        // Continue without failing the carrier creation
+      }
 
       addNotification({
         type: 'success',
@@ -200,10 +231,33 @@ export default function AddCarrierForm({ user }: Props) {
       router.push('/admin/carriers')
     } catch (error: unknown) {
       console.error('Error adding carrier:', error)
+      console.error('Error type:', typeof error)
+      console.error('Error constructor:', error?.constructor?.name)
+      
+      if (error && typeof error === 'object') {
+        console.error('Error keys:', Object.keys(error))
+        console.error('Error details:', {
+          message: (error as any).message,
+          code: (error as any).code,
+          details: (error as any).details,
+          hint: (error as any).hint,
+          stack: (error as any).stack
+        })
+      }
+      
+      let errorMessage = 'An unexpected error occurred'
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = (error as Error).message
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      } else {
+        errorMessage = JSON.stringify(error)
+      }
+      
       addNotification({
         type: 'error',
         title: 'Failed to Add Carrier',
-        message: (error as Error)?.message || 'An unexpected error occurred'
+        message: errorMessage
       })
     } finally {
       setLoading(false)
