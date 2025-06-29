@@ -382,7 +382,6 @@ export function mapFMCSAToCarrierData(fmcsaData: FMCSACarrierData) {
     authority_status: fmcsaData.authorityStatus || 'Unknown',
     vehicle_count: fmcsaData.powerUnits,
     data_source: 'fmcsa',
-    last_fmcsa_update: fmcsaData.lastUpdated,
     verified: true,
     verification_date: new Date().toISOString(),
     trust_score: 95 // High trust score for FMCSA data
