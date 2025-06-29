@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -10,6 +10,8 @@ import { processAnalyticsData } from '@/lib/analytics'
 import AnalyticsSummary from '@/components/analytics/AnalyticsSummary'
 import SafetyRatingChart from '@/components/analytics/SafetyRatingChart'
 import ComplianceChart from '@/components/analytics/ComplianceChart'
+import EnhancedCarrierCard from '@/components/dashboard/EnhancedCarrierCard'
+import SmartDashboardLayout from '@/components/dashboard/SmartDashboardLayout'
 
 interface Carrier {
   id: string
@@ -43,6 +45,16 @@ interface User {
   email?: string
 }
 
+interface DashboardFilters {
+  search: string
+  riskLevel: 'all' | 'high' | 'medium' | 'low'
+  priority: 'all' | 'high' | 'medium' | 'low'
+  compliance: 'all' | 'compliant' | 'non-compliant' | 'partial'
+  tags: string[]
+  sortBy: 'name' | 'added' | 'updated' | 'priority' | 'risk'
+  groupBy: 'none' | 'risk' | 'priority' | 'status'
+}
+
 interface Props {
   user: User
   savedCarriers: SavedCarrier[]
@@ -52,8 +64,25 @@ interface Props {
 export default function DashboardClient({ user, savedCarriers, alertedCarrierIds }: Props) {
   const [carriers, setCarriers] = useState<SavedCarrier[]>(savedCarriers)
   const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false)
-  const [showAnalytics, setShowAnalytics] = useState(true)
+  const [selectedCarriers, setSelectedCarriers] = useState<Set<string>>(new Set())
+  const [dashboardFilters, setDashboardFilters] = useState<DashboardFilters>({
+    search: '',
+    riskLevel: 'all',
+    priority: 'all',
+    compliance: 'all',
+    tags: [],
+    sortBy: 'risk',
+    groupBy: 'risk'
+  })
+  const [viewMode, setViewMode] = useState<'compact' | 'detailed'>('detailed')
+  const [activeTab, setActiveTab] = useState<'carriers' | 'analytics'>('carriers')
+  const [showBulkActions, setShowBulkActions] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showBulkTagModal, setShowBulkTagModal] = useState(false)
+  const [bulkTagForm, setBulkTagForm] = useState<{
+    action: 'add' | 'remove'
+    tags: string[]
+  }>({ action: 'add', tags: [] })
   const [carrierToDelete, setCarrierToDelete] = useState<{ id: string, name: string, alertCount: number } | null>(null)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [editingCarrier, setEditingCarrier] = useState<string | null>(null)
@@ -295,6 +324,353 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
     setEditForm({ ...editForm, tags: editForm.tags.filter(tag => tag !== tagToRemove) })
   }
 
+  // Bulk selection functions
+  const handleSelectCarrier = (carrierId: string, checked: boolean) => {
+    const newSelected = new Set(selectedCarriers)
+    if (checked) {
+      newSelected.add(carrierId)
+    } else {
+      newSelected.delete(carrierId)
+    }
+    setSelectedCarriers(newSelected)
+    setShowBulkActions(newSelected.size > 0)
+  }
+
+  const handleSelectAll = () => {
+    if (selectedCarriers.size === carriers.length) {
+      // Deselect all
+      setSelectedCarriers(new Set())
+      setShowBulkActions(false)
+    } else {
+      // Select all
+      const allIds = new Set(carriers.map(c => c.id))
+      setSelectedCarriers(allIds)
+      setShowBulkActions(true)
+    }
+  }
+
+  const clearSelection = () => {
+    setSelectedCarriers(new Set())
+    setShowBulkActions(false)
+  }
+
+  // Bulk operations
+  const handleBulkDelete = async () => {
+    if (selectedCarriers.size === 0) return
+
+    try {
+      // Delete all selected carriers
+      const deletePromises = Array.from(selectedCarriers).map(async (carrierId) => {
+        const carrier = carriers.find(c => c.id === carrierId)
+        if (!carrier) return
+
+        // Delete any alerts first
+        await supabase
+          .from('monitoring_alerts')
+          .delete()
+          .eq('carrier_id', carrier.carriers.id)
+          .eq('user_id', user.id)
+
+        // Delete the saved carrier
+        await supabase
+          .from('saved_carriers')
+          .delete()
+          .eq('id', carrierId)
+      })
+
+      await Promise.all(deletePromises)
+
+      // Update UI
+      const remainingCarriers = carriers.filter(c => !selectedCarriers.has(c.id))
+      setCarriers(remainingCarriers)
+      
+      addNotification({
+        type: 'success',
+        title: 'Carriers Deleted',
+        message: `${selectedCarriers.size} carrier${selectedCarriers.size > 1 ? 's' : ''} removed from your dashboard.`
+      })
+
+      clearSelection()
+    } catch (error) {
+      console.error('Bulk delete error:', error)
+      addNotification({
+        type: 'error',
+        title: 'Delete Failed',
+        message: 'Failed to delete some carriers. Please try again.'
+      })
+    }
+  }
+
+  const handleBulkExport = (format: 'csv' | 'excel' | 'pdf') => {
+    const selectedCarrierData = carriers.filter(c => selectedCarriers.has(c.id))
+    
+    switch (format) {
+      case 'csv':
+        exportToCSV(selectedCarrierData)
+        break
+      case 'excel':
+        exportToExcel(selectedCarrierData)
+        break
+      case 'pdf':
+        exportToPDF(selectedCarrierData)
+        break
+    }
+
+    addNotification({
+      type: 'success',
+      title: 'Export Complete',
+      message: `${selectedCarriers.size} carrier${selectedCarriers.size > 1 ? 's' : ''} exported successfully.`
+    })
+  }
+
+  const handleBulkTagSubmit = async () => {
+    if (selectedCarriers.size === 0 || bulkTagForm.tags.length === 0) return
+
+    try {
+      const updatePromises = Array.from(selectedCarriers).map(async (carrierId) => {
+        const carrier = carriers.find(c => c.id === carrierId)
+        if (!carrier) return
+
+        let newTags = [...(carrier.tags || [])]
+        
+        if (bulkTagForm.action === 'add') {
+          // Add tags that don't already exist
+          bulkTagForm.tags.forEach(tag => {
+            if (!newTags.includes(tag)) {
+              newTags.push(tag)
+            }
+          })
+        } else {
+          // Remove specified tags
+          newTags = newTags.filter(tag => !bulkTagForm.tags.includes(tag))
+        }
+
+        await supabase
+          .from('saved_carriers')
+          .update({ tags: newTags })
+          .eq('id', carrierId)
+      })
+
+      await Promise.all(updatePromises)
+
+      // Update UI
+      setCarriers(carriers.map(carrier => {
+        if (selectedCarriers.has(carrier.id)) {
+          let newTags = [...(carrier.tags || [])]
+          
+          if (bulkTagForm.action === 'add') {
+            bulkTagForm.tags.forEach(tag => {
+              if (!newTags.includes(tag)) {
+                newTags.push(tag)
+              }
+            })
+          } else {
+            newTags = newTags.filter(tag => !bulkTagForm.tags.includes(tag))
+          }
+
+          return { ...carrier, tags: newTags }
+        }
+        return carrier
+      }))
+
+      addNotification({
+        type: 'success',
+        title: 'Tags Updated',
+        message: `Tags ${bulkTagForm.action === 'add' ? 'added to' : 'removed from'} ${selectedCarriers.size} carrier${selectedCarriers.size > 1 ? 's' : ''}.`
+      })
+
+      setShowBulkTagModal(false)
+      setBulkTagForm({ action: 'add', tags: [] })
+      clearSelection()
+    } catch (error) {
+      console.error('Bulk tag error:', error)
+      addNotification({
+        type: 'error',
+        title: 'Tag Update Failed',
+        message: 'Failed to update tags. Please try again.'
+      })
+    }
+  }
+
+  const addBulkTag = (tag: string) => {
+    if (tag && !bulkTagForm.tags.includes(tag)) {
+      setBulkTagForm({ ...bulkTagForm, tags: [...bulkTagForm.tags, tag] })
+    }
+  }
+
+  const removeBulkTag = (tagToRemove: string) => {
+    setBulkTagForm({ ...bulkTagForm, tags: bulkTagForm.tags.filter(tag => tag !== tagToRemove) })
+  }
+
+  // Quick update functionality for inline editing
+  const handleQuickUpdate = async (carrierId: string, field: string, value: any) => {
+    try {
+      const updateData: any = {}
+      updateData[field] = value
+
+      const { error } = await supabase
+        .from('saved_carriers')
+        .update(updateData)
+        .eq('id', carrierId)
+
+      if (error) throw error
+
+      // Update local state
+      setCarriers(carriers.map(carrier => 
+        carrier.id === carrierId 
+          ? { ...carrier, [field]: value, updated_at: new Date().toISOString() }
+          : carrier
+      ))
+
+      addNotification({
+        type: 'success',
+        title: 'Updated',
+        message: `Carrier ${field} updated successfully.`
+      })
+    } catch (error) {
+      console.error('Quick update error:', error)
+      addNotification({
+        type: 'error',
+        title: 'Update Failed',
+        message: 'Failed to update carrier. Please try again.'
+      })
+    }
+  }
+
+  // Calculate risk level for filtering
+  const getRiskLevel = (savedCarrier: SavedCarrier) => {
+    const rating = savedCarrier.carriers.safety_rating?.toLowerCase()
+    const insurance = savedCarrier.carriers.insurance_status === 'Active'
+    const authority = savedCarrier.carriers.authority_status === 'Active'
+    const priority = savedCarrier.priority
+    
+    if (rating === 'unsatisfactory' || (!insurance && !authority) || priority === 'high') {
+      return 'high'
+    } else if (rating === 'conditional' || !insurance || !authority) {
+      return 'medium'
+    }
+    return 'low'
+  }
+
+  // Filter and sort carriers based on dashboard filters
+  const filteredAndSortedCarriers = useMemo(() => {
+    let filtered = [...carriers]
+
+    // Apply search filter
+    if (dashboardFilters.search) {
+      const searchTerm = dashboardFilters.search.toLowerCase()
+      filtered = filtered.filter(c => 
+        c.carriers.legal_name.toLowerCase().includes(searchTerm) ||
+        c.carriers.dba_name?.toLowerCase().includes(searchTerm) ||
+        c.carriers.dot_number.includes(searchTerm) ||
+        c.notes?.toLowerCase().includes(searchTerm) ||
+        c.tags?.some(tag => tag.toLowerCase().includes(searchTerm))
+      )
+    }
+
+    // Apply risk level filter
+    if (dashboardFilters.riskLevel !== 'all') {
+      filtered = filtered.filter(c => getRiskLevel(c) === dashboardFilters.riskLevel)
+    }
+
+    // Apply priority filter
+    if (dashboardFilters.priority !== 'all') {
+      filtered = filtered.filter(c => c.priority === dashboardFilters.priority)
+    }
+
+    // Apply compliance filter
+    if (dashboardFilters.compliance !== 'all') {
+      filtered = filtered.filter(c => {
+        const insurance = c.carriers.insurance_status === 'Active'
+        const authority = c.carriers.authority_status === 'Active'
+        
+        switch (dashboardFilters.compliance) {
+          case 'compliant':
+            return insurance && authority
+          case 'partial':
+            return (insurance && !authority) || (!insurance && authority)
+          case 'non-compliant':
+            return !insurance && !authority
+          default:
+            return true
+        }
+      })
+    }
+
+    // Apply tag filter
+    if (dashboardFilters.tags.length > 0) {
+      filtered = filtered.filter(c => 
+        c.tags && c.tags.some(tag => dashboardFilters.tags.includes(tag))
+      )
+    }
+
+    // Sort carriers
+    filtered.sort((a, b) => {
+      switch (dashboardFilters.sortBy) {
+        case 'name':
+          return a.carriers.legal_name.localeCompare(b.carriers.legal_name)
+        case 'added':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        case 'updated':
+          const aUpdated = a.updated_at || a.created_at
+          const bUpdated = b.updated_at || b.created_at
+          return new Date(bUpdated).getTime() - new Date(aUpdated).getTime()
+        case 'priority':
+          const priorityOrder = { high: 3, medium: 2, low: 1 }
+          const aPriority = priorityOrder[a.priority || 'medium']
+          const bPriority = priorityOrder[b.priority || 'medium']
+          return bPriority - aPriority
+        case 'risk':
+          const riskOrder = { high: 3, medium: 2, low: 1 }
+          const aRisk = riskOrder[getRiskLevel(a)]
+          const bRisk = riskOrder[getRiskLevel(b)]
+          return bRisk - aRisk
+        default:
+          return 0
+      }
+    })
+
+    return filtered
+  }, [carriers, dashboardFilters])
+
+  // Group carriers if grouping is enabled
+  const groupedCarriers = useMemo(() => {
+    if (dashboardFilters.groupBy === 'none') {
+      return { 'All Carriers': filteredAndSortedCarriers }
+    }
+
+    const groups: Record<string, SavedCarrier[]> = {}
+    
+    filteredAndSortedCarriers.forEach(carrier => {
+      let groupKey = ''
+      
+      switch (dashboardFilters.groupBy) {
+        case 'risk':
+          const risk = getRiskLevel(carrier)
+          groupKey = risk === 'high' ? 'High Risk' : risk === 'medium' ? 'Medium Risk' : 'Low Risk'
+          break
+        case 'priority':
+          groupKey = carrier.priority ? `${carrier.priority.charAt(0).toUpperCase() + carrier.priority.slice(1)} Priority` : 'Medium Priority'
+          break
+        case 'status':
+          const insurance = carrier.carriers.insurance_status === 'Active'
+          const authority = carrier.carriers.authority_status === 'Active'
+          groupKey = insurance && authority ? 'Fully Compliant' : 
+                    (insurance || authority) ? 'Partial Compliance' : 'Non-Compliant'
+          break
+        default:
+          groupKey = 'All Carriers'
+      }
+      
+      if (!groups[groupKey]) {
+        groups[groupKey] = []
+      }
+      groups[groupKey].push(carrier)
+    })
+
+    return groups
+  }, [filteredAndSortedCarriers, dashboardFilters.groupBy])
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
@@ -315,11 +691,69 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tab Navigation */}
         <div className="mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Your Saved Carriers {carriers.length > 0 && <span className="text-sm font-normal text-gray-600">({carriers.length})</span>}
-            </h2>
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('carriers')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'carriers'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  Carriers
+                  {carriers.length > 0 && (
+                    <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+                      {carriers.length}
+                    </span>
+                  )}
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'analytics'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  Analytics
+                </div>
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'carriers' && (
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Your Saved Carriers {carriers.length > 0 && <span className="text-sm font-normal text-gray-600">({carriers.length})</span>}
+              </h2>
+              {carriers.length > 0 && (
+                <label className="flex items-center gap-2 text-sm text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={selectedCarriers.size === carriers.length && carriers.length > 0}
+                    onChange={handleSelectAll}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  Select All
+                </label>
+              )}
+            </div>
             <div className="flex gap-3">
               <Link
                 href="/dashboard/alerts"
@@ -388,184 +822,242 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
             </div>
           </div>
 
-          {/* Analytics Section */}
-          {carriers.length > 0 && (
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Portfolio Analytics</h2>
+          {/* Bulk Actions Toolbar */}
+          {showBulkActions && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-blue-900">
+                    {selectedCarriers.size} carrier{selectedCarriers.size > 1 ? 's' : ''} selected
+                  </span>
+                  <button
+                    onClick={clearSelection}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Clear selection
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
+                      className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-1 text-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Export Selected
+                    </button>
+                    {isExportDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                        <div className="py-1">
+                          <button
+                            onClick={() => {
+                              handleBulkExport('csv');
+                              setIsExportDropdownOpen(false);
+                            }}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                          >
+                            📄 Export as CSV
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleBulkExport('excel');
+                              setIsExportDropdownOpen(false);
+                            }}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                          >
+                            📊 Export as Excel
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleBulkExport('pdf');
+                              setIsExportDropdownOpen(false);
+                            }}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                          >
+                            📋 Export as PDF
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setShowBulkTagModal(true)}
+                    className="px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center gap-1 text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    Tag Selected
+                  </button>
+                  <button
+                    onClick={handleBulkDelete}
+                    className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-1 text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete Selected
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+            {/* Enhanced Dashboard Layout */}
+          <SmartDashboardLayout
+            carriers={filteredAndSortedCarriers}
+            analytics={analytics}
+            selectedCarriers={selectedCarriers}
+            onFilterChange={setDashboardFilters}
+            onViewChange={setViewMode}
+          >
+            {carriers.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-12 h-12 bg-gray-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No saved carriers yet</h3>
+                <p className="text-gray-600 mb-4">Start by searching for carriers to track their safety and compliance status.</p>
                 <button
-                  onClick={() => setShowAnalytics(!showAnalytics)}
-                  className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
+                  onClick={() => router.push('/search')}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
-                  {showAnalytics ? (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                      </svg>
-                      Hide Analytics
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                      Show Analytics
-                    </>
-                  )}
+                  Search Carriers
                 </button>
               </div>
-              
-              {showAnalytics && (
-                <>
-                  {/* Summary Cards */}
-                  <AnalyticsSummary analytics={analytics} />
-                  
-                  {/* Charts Grid */}
-                  <div className="grid lg:grid-cols-2 gap-6">
-                    <SafetyRatingChart analytics={analytics} />
-                    <ComplianceChart analytics={analytics} />
+            ) : (
+              <>
+                {Object.entries(groupedCarriers).map(([groupName, groupCarriers]) => (
+                  <div key={groupName} className="space-y-4">
+                    {dashboardFilters.groupBy !== 'none' && (
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold text-gray-900">{groupName}</h3>
+                        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
+                          {groupCarriers.length} carrier{groupCarriers.length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className={`grid gap-4 ${
+                      viewMode === 'compact' ? 'lg:grid-cols-2' : 'grid-cols-1'
+                    }`}>
+                      {groupCarriers.map((savedCarrier) => (
+                        <EnhancedCarrierCard
+                          key={savedCarrier.id}
+                          savedCarrier={savedCarrier}
+                          isSelected={selectedCarriers.has(savedCarrier.id)}
+                          isAlerted={alertedCarrierIds.has(savedCarrier.carriers.id)}
+                          onSelect={handleSelectCarrier}
+                          onRemove={handleRemoveCarrier}
+                          onEdit={startEditing}
+                          onQuickUpdate={handleQuickUpdate}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </>
-              )}
-            </div>
-          )}
+                ))}
+              </>
+            )}
+          </SmartDashboardLayout>
+          </div>
+        )}
 
-          {carriers.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-12 h-12 bg-gray-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
-                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold text-gray-900">Portfolio Analytics</h2>
+              <div className="text-sm text-gray-600">
+                Analysis of {carriers.length} carrier{carriers.length !== 1 ? 's' : ''}
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No saved carriers yet</h3>
-              <p className="text-gray-600 mb-4">Start by searching for carriers to track their safety and compliance status.</p>
-              <button
-                onClick={() => router.push('/search')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Search Carriers
-              </button>
             </div>
-          ) : (
-            <div className="grid gap-6">
-              {carriers.map((savedCarrier) => {
-                const carrier = savedCarrier.carriers
-                return (
-                  <div key={savedCarrier.id} className="bg-white rounded-lg shadow-md p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex items-start gap-3">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <Link 
-                              href={`/carrier/${carrier.dot_number}`}
-                              className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer"
-                            >
-                              {carrier.legal_name}
-                            </Link>
-                            {alertedCarrierIds.has(carrier.id) && (
-                              <div className="flex items-center gap-1">
-                                <div className="relative">
-                                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
-                                    <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                      <path d="M10 2L13.09 8.26L20 9L15 14L16.18 21L10 17.77L3.82 21L5 14L0 9L6.91 8.26L10 2Z"/>
-                                    </svg>
-                                  </div>
-                                  <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
-                                </div>
-                                <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                                  Monitored
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          {carrier.dba_name && (
-                            <p className="text-sm text-gray-600">DBA: {carrier.dba_name}</p>
-                          )}
-                          <p className="text-sm text-gray-600">DOT: {carrier.dot_number}</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveCarrier(savedCarrier.id)}
-                        className="text-gray-400 hover:text-red-500"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
 
-                    <div className="grid md:grid-cols-3 gap-4 mb-4">
-                      <div>
-                        <span className="text-sm text-gray-600">Safety Rating</span>
-                        <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getSafetyRatingColor(carrier.safety_rating)}`}>
-                          {carrier.safety_rating}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Insurance</span>
-                        <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                          carrier.insurance_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {carrier.insurance_status}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Authority</span>
-                        <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                          carrier.authority_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {carrier.authority_status}
-                        </div>
-                      </div>
-                    </div>
+            {carriers.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-12 h-12 bg-gray-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No data for analytics</h3>
+                <p className="text-gray-600 mb-4">Add carriers to your dashboard to see portfolio analytics and insights.</p>
+                <button
+                  onClick={() => {
+                    setActiveTab('carriers')
+                    router.push('/search')
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Search Carriers
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Summary Cards */}
+                <AnalyticsSummary analytics={analytics} />
+                
+                {/* Charts Grid */}
+                <div className="grid lg:grid-cols-2 gap-6">
+                  <SafetyRatingChart analytics={analytics} />
+                  <ComplianceChart analytics={analytics} />
+                </div>
 
-                    {/* Enhanced Carrier Information */}
-                    <div className="space-y-4">
-                      {/* Priority and Tags Section */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        <div className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(savedCarrier.priority || 'medium')}`}>
-                          {(savedCarrier.priority || 'medium').toUpperCase()} Priority
-                        </div>
-                        {savedCarrier.tags && savedCarrier.tags.length > 0 && (
-                          <>
-                            {savedCarrier.tags.map((tag, index) => (
-                              <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                                #{tag}
-                              </span>
-                            ))}
-                          </>
-                        )}
-                        {savedCarrier.last_contacted && (
-                          <span className="text-xs text-gray-500">
-                            Last contacted: {new Date(savedCarrier.last_contacted).toLocaleDateString()}
+                {/* Additional Analytics Insights */}
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Portfolio Insights</h3>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Risk Assessment</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>High Risk Carriers</span>
+                          <span className="font-medium text-red-600">
+                            {analytics.riskAssessment.highRisk} ({Math.round((analytics.riskAssessment.highRisk / analytics.totalCarriers) * 100)}%)
                           </span>
-                        )}
-                      </div>
-
-                      {/* Notes Section */}
-                      {savedCarrier.notes && (
-                        <div className="bg-gray-50 rounded-md p-3">
-                          <span className="text-sm text-gray-600">Notes: </span>
-                          <span className="text-sm text-gray-900">{savedCarrier.notes}</span>
                         </div>
-                      )}
-
-                      {/* Edit Button */}
-                      <div className="flex justify-end">
-                        <button
-                          onClick={() => startEditing(savedCarrier)}
-                          className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
-                        >
-                          Edit Details
-                        </button>
+                        <div className="flex justify-between text-sm">
+                          <span>Medium Risk Carriers</span>
+                          <span className="font-medium text-yellow-600">
+                            {analytics.riskAssessment.mediumRisk} ({Math.round((analytics.riskAssessment.mediumRisk / analytics.totalCarriers) * 100)}%)
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>Low Risk Carriers</span>
+                          <span className="font-medium text-green-600">
+                            {analytics.riskAssessment.lowRisk} ({Math.round((analytics.riskAssessment.lowRisk / analytics.totalCarriers) * 100)}%)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Recent Activity</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Added This Week</span>
+                          <span className="font-medium text-blue-600">{analytics.recentActivity.addedThisWeek}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>Added This Month</span>
+                          <span className="font-medium text-blue-600">{analytics.recentActivity.addedThisMonth}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>Portfolio Growth</span>
+                          <span className="font-medium text-green-600">
+                            {analytics.recentActivity.addedThisMonth > 0 ? '+' : ''}{analytics.recentActivity.addedThisMonth} this month
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </main>
 
       {/* Delete Confirmation Modal */}
@@ -779,6 +1271,139 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
           </div>
         )
       })()}
+
+      {/* Bulk Tag Modal */}
+      {showBulkTagModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-gray-900">
+                Bulk Tag Management
+              </h3>
+              <button
+                onClick={() => {
+                  setShowBulkTagModal(false)
+                  setBulkTagForm({ action: 'add', tags: [] })
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Action</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="action"
+                      value="add"
+                      checked={bulkTagForm.action === 'add'}
+                      onChange={(e) => setBulkTagForm({ ...bulkTagForm, action: e.target.value as 'add' | 'remove' })}
+                      className="mr-2"
+                    />
+                    Add Tags
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="action"
+                      value="remove"
+                      checked={bulkTagForm.action === 'remove'}
+                      onChange={(e) => setBulkTagForm({ ...bulkTagForm, action: e.target.value as 'add' | 'remove' })}
+                      className="mr-2"
+                    />
+                    Remove Tags
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {bulkTagForm.action === 'add' ? 'Add Tags' : 'Remove Tags'}
+                </label>
+                <div className="mb-3">
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {predefinedTags.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => addBulkTag(tag)}
+                        disabled={bulkTagForm.tags.includes(tag)}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                          bulkTagForm.tags.includes(tag)
+                            ? 'bg-purple-100 text-purple-800 cursor-not-allowed opacity-50'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        + {tag}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Add custom tag..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        const target = e.target as HTMLInputElement
+                        addBulkTag(target.value.trim())
+                        target.value = ''
+                      }
+                    }}
+                  />
+                </div>
+                
+                {bulkTagForm.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {bulkTagForm.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
+                      >
+                        #{tag}
+                        <button
+                          onClick={() => removeBulkTag(tag)}
+                          className="text-purple-600 hover:text-purple-800"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="text-sm text-gray-600">
+                This will {bulkTagForm.action} the selected tags {bulkTagForm.action === 'add' ? 'to' : 'from'} {selectedCarriers.size} carrier{selectedCarriers.size > 1 ? 's' : ''}.
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowBulkTagModal(false)
+                  setBulkTagForm({ action: 'add', tags: [] })
+                }}
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkTagSubmit}
+                disabled={bulkTagForm.tags.length === 0}
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
+              >
+                {bulkTagForm.action === 'add' ? 'Add Tags' : 'Remove Tags'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
