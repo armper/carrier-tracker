@@ -148,7 +148,7 @@ ALTER TABLE saved_carriers ADD COLUMN last_contacted DATE;
 - [x] Search History
 - [x] Dashboard Analytics
 - [x] Bulk Operations
-- [ ] Improved Landing Page
+- [x] Improved Landing Page
 - [ ] User Profile Page
 
 ## 💡 Next Steps
