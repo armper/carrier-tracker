@@ -82,8 +82,8 @@ export async function GET(request: NextRequest) {
           .from('carriers')
           .upsert({
             ...mappedData,
-            updated_at: new Date().toISOString(),
-            last_fmcsa_update: new Date().toISOString()
+            updated_at: new Date().toISOString()
+            // TODO: Add last_fmcsa_update after database migration
           }, {
             onConflict: 'dot_number'
           })

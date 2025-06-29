@@ -176,73 +176,132 @@ export class FMCSAService {
         lastUpdated: new Date().toISOString()
       }
 
-      // Extract legal name
-      const legalNameMatch = html.match(/Legal Name[:\s]*([^<\n\r]+)/i)
-      if (legalNameMatch) {
-        data.legalName = legalNameMatch[1].trim()
-      }
+      // Check if page requires JavaScript (common with FMCSA)
+      if (html.includes('This page requires scripting to be enabled') || html.includes('<noscript>')) {
+        // Try to extract from page title as fallback
+        const titleMatch = html.match(/<TITLE>SAFER Web - Company Snapshot[^>]*?\s+([^<]+)<\/TITLE>/i)
+        if (titleMatch) {
+          const titleName = titleMatch[1].trim()
+          if (titleName && 
+              titleName !== 'USDOT' && 
+              titleName !== 'RECORD INACTIVE' && 
+              !titleName.includes('INACTIVE') &&
+              titleName.length > 3) {
+            data.legalName = titleName
+            // Set basic defaults for JavaScript-disabled page
+            data.safetyRating = 'not-rated'
+            data.insuranceStatus = 'Unknown'
+            data.authorityStatus = 'Unknown'
+            console.log('Extracted company name from title:', titleName)
+          }
+        }
+      } else {
+        // Normal HTML parsing for non-JavaScript pages
+        
+        // Extract legal name with better patterns
+        let legalNameMatch = html.match(/Legal Name[:\s]*<[^>]*>([^<]+)</i) ||
+                           html.match(/Legal Name[:\s]*([^<\n\r]+)/i)
+        if (legalNameMatch) {
+          const name = legalNameMatch[1].trim()
+          if (name && name !== ':' && name.length > 2) {
+            data.legalName = name
+          }
+        }
 
-      // Extract DBA name
-      const dbaMatch = html.match(/DBA Name[:\s]*([^<\n\r]+)/i)
-      if (dbaMatch) {
-        data.dbaName = dbaMatch[1].trim()
-      }
+        // Extract DBA name with better patterns
+        let dbaMatch = html.match(/DBA Name[:\s]*<[^>]*>([^<]+)</i) ||
+                      html.match(/DBA Name[:\s]*([^<\n\r]+)/i)
+        if (dbaMatch) {
+          const dba = dbaMatch[1].trim()
+          if (dba && dba !== ':' && dba.length > 2) {
+            data.dbaName = dba
+          }
+        }
 
-      // Extract physical address
-      const addressMatch = html.match(/Physical Address[:\s]*([^<\n\r]+(?:\n[^<\n\r]+)*)/i)
-      if (addressMatch) {
-        data.physicalAddress = addressMatch[1].replace(/\s+/g, ' ').trim()
-      }
+        // Extract physical address
+        const addressMatch = html.match(/Physical Address[:\s]*<[^>]*>([^<]+)</i) ||
+                           html.match(/Physical Address[:\s]*([^<\n\r]+)/i)
+        if (addressMatch) {
+          const address = addressMatch[1].replace(/\s+/g, ' ').trim()
+          if (address && address !== ':' && address.length > 3) {
+            data.physicalAddress = address
+          }
+        }
 
-      // Extract phone
-      const phoneMatch = html.match(/Phone[:\s]*([^<\n\r]+)/i)
-      if (phoneMatch) {
-        data.phone = phoneMatch[1].trim()
-      }
+        // Extract phone with better validation
+        const phoneMatch = html.match(/Phone[:\s]*<[^>]*>([^<]+)</i) ||
+                         html.match(/Phone[:\s]*([^<\n\r]+)/i)
+        if (phoneMatch) {
+          const phone = phoneMatch[1].trim()
+          if (phone && phone !== ':' && phone !== '">Phone:' && phone.length > 5) {
+            data.phone = phone
+          }
+        }
 
-      // Extract safety rating
-      const safetyMatch = html.match(/Safety Rating[:\s]*([^<\n\r]+)/i)
-      if (safetyMatch) {
-        data.safetyRating = safetyMatch[1].trim().toLowerCase()
-      }
+        // Extract safety rating
+        const safetyMatch = html.match(/Safety Rating[:\s]*<[^>]*>([^<]+)</i) ||
+                          html.match(/Safety Rating[:\s]*([A-Za-z\s]+)/i)
+        if (safetyMatch) {
+          const rating = safetyMatch[1].trim().toLowerCase()
+          if (rating && !rating.includes('does not necessarily') && rating.length < 20) {
+            data.safetyRating = rating
+          }
+        }
 
-      // Extract operating status  
-      const statusMatch = html.match(/Operating Status[:\s]*([^<\n\r]+)/i)
-      if (statusMatch) {
-        data.operatingStatus = statusMatch[1].trim()
-        // Map operating status to our insurance/authority status
-        const status = statusMatch[1].trim().toLowerCase()
-        if (status.includes('active')) {
-          data.insuranceStatus = 'Active'
-          data.authorityStatus = 'Active'
-        } else if (status.includes('out')) {
-          data.insuranceStatus = 'Inactive'
-          data.authorityStatus = 'Inactive'
+        // Extract operating status  
+        const statusMatch = html.match(/Operating Status[:\s]*<[^>]*>([^<]+)</i) ||
+                          html.match(/Operating Status[:\s]*([A-Za-z\s]+)/i)
+        if (statusMatch) {
+          const status = statusMatch[1].trim()
+          if (status && status !== ':' && status.length < 20) {
+            data.operatingStatus = status
+            // Map operating status to our insurance/authority status
+            const statusLower = status.toLowerCase()
+            if (statusLower.includes('active') || statusLower.includes('authorized')) {
+              data.insuranceStatus = 'Active'
+              data.authorityStatus = 'Active'
+            } else if (statusLower.includes('out') || statusLower.includes('inactive')) {
+              data.insuranceStatus = 'Inactive'
+              data.authorityStatus = 'Inactive'
+            }
+          }
+        }
+
+        // Extract power units (vehicles)
+        const powerUnitsMatch = html.match(/Power Units[:\s]*(\d+)/i)
+        if (powerUnitsMatch) {
+          data.powerUnits = parseInt(powerUnitsMatch[1])
+        }
+
+        // Extract drivers
+        const driversMatch = html.match(/Drivers[:\s]*(\d+)/i)
+        if (driversMatch) {
+          data.drivers = parseInt(driversMatch[1])
         }
       }
 
-      // Extract power units (vehicles)
-      const powerUnitsMatch = html.match(/Power Units[:\s]*(\d+)/i)
-      if (powerUnitsMatch) {
-        data.powerUnits = parseInt(powerUnitsMatch[1])
-      }
-
-      // Extract drivers
-      const driversMatch = html.match(/Drivers[:\s]*(\d+)/i)
-      if (driversMatch) {
-        data.drivers = parseInt(driversMatch[1])
-      }
-
-      // Extract MCS number
-      const mcsMatch = html.match(/MCS[:\s]*([^<\n\r]+)/i)
-      if (mcsMatch) {
-        data.mcsNumber = mcsMatch[1].trim()
+      // Debug logging (remove in production)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('FMCSA parsed data:', data)
       }
 
       // Verify we got at least basic data
       if (!data.legalName && !data.dbaName) {
         console.warn('No carrier name found in FMCSA response')
-        return null
+        console.warn('Available data keys:', Object.keys(data))
+        // Try one more extraction from HTML content
+        const anyNameMatch = html.match(/Company Snapshot[^>]*?\s+(\w+[^<\n\r]{10,})/i)
+        if (anyNameMatch) {
+          const possibleName = anyNameMatch[1].trim()
+          if (possibleName.length > 5 && possibleName.length < 100) {
+            data.legalName = possibleName
+            console.log('Extracted name from snapshot header:', possibleName)
+          }
+        }
+        
+        if (!data.legalName && !data.dbaName) {
+          return null
+        }
       }
 
       return data as FMCSACarrierData
