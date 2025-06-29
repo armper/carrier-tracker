@@ -378,7 +378,7 @@ export default function Home() {
                     ))}
                   </div>
                   <blockquote className="text-gray-700 italic">
-                    "{testimonial.quote}"
+                    &ldquo;{testimonial.quote}&rdquo;
                   </blockquote>
                 </div>
                 <div className="border-t pt-4">
@@ -399,7 +399,7 @@ export default function Home() {
             Ready to transform your carrier management?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join hundreds of freight brokers who've already made the switch to smarter carrier tracking.
+            Join hundreds of freight brokers who&apos;ve already made the switch to smarter carrier tracking.
           </p>
           {user ? (
             <Link href="/dashboard" className="inline-block px-8 py-4 bg-white text-blue-600 rounded-lg hover:bg-gray-50 font-semibold text-lg">

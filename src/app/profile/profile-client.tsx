@@ -78,13 +78,13 @@ export default function ProfileClient({ user, profile }: Props) {
 
       if (userError) throw userError
 
-      addNotification('Profile updated successfully', 'success')
+      addNotification({ type: 'success', title: 'Profile updated successfully' })
       setIsEditing(false)
       router.refresh()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Profile update error:', error)
-      const errorMessage = error?.message || error?.details || 'Failed to update profile'
-      addNotification(errorMessage, 'error')
+      const errorMessage = (error as Error)?.message || 'Failed to update profile'
+      addNotification({ type: 'error', title: 'Profile Update Failed', message: errorMessage })
     } finally {
       setLoading(false)
     }
@@ -94,12 +94,12 @@ export default function ProfileClient({ user, profile }: Props) {
     e.preventDefault()
     
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      addNotification('New passwords do not match', 'error')
+      addNotification({ type: 'error', title: 'Password Mismatch', message: 'New passwords do not match' })
       return
     }
 
     if (passwordForm.newPassword.length < 6) {
-      addNotification('Password must be at least 6 characters', 'error')
+      addNotification({ type: 'error', title: 'Password Too Short', message: 'Password must be at least 6 characters' })
       return
     }
 
@@ -112,12 +112,12 @@ export default function ProfileClient({ user, profile }: Props) {
 
       if (error) throw error
 
-      addNotification('Password updated successfully', 'success')
+      addNotification({ type: 'success', title: 'Password updated successfully' })
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setIsChangingPassword(false)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Password update error:', error)
-      addNotification(error.message || 'Failed to update password', 'error')
+      addNotification({ type: 'error', title: 'Password Update Failed', message: (error as Error)?.message || 'Failed to update password' })
     } finally {
       setLoading(false)
     }
@@ -336,7 +336,7 @@ export default function ProfileClient({ user, profile }: Props) {
                   Your password was last updated on {new Date().toLocaleDateString()}
                 </p>
                 <p className="text-sm text-gray-500 mt-2">
-                  We recommend using a strong password that you don't use elsewhere.
+                  We recommend using a strong password that you don&apos;t use elsewhere.
                 </p>
               </div>
             )}

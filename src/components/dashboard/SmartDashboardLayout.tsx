@@ -51,7 +51,6 @@ interface DashboardFilters {
 
 export default function SmartDashboardLayout({ 
   carriers, 
-  analytics, 
   selectedCarriers,
   children,
   onFilterChange,
@@ -238,7 +237,7 @@ export default function SmartDashboardLayout({
                 <label className="block text-xs font-medium text-gray-700 mb-1">Risk Level</label>
                 <select
                   value={filters.riskLevel}
-                  onChange={(e) => updateFilters({ riskLevel: e.target.value as any })}
+                  onChange={(e) => updateFilters({ riskLevel: e.target.value as 'all' | 'high' | 'medium' | 'low' })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
                   <option value="all">All Risk Levels</option>
@@ -253,7 +252,7 @@ export default function SmartDashboardLayout({
                 <label className="block text-xs font-medium text-gray-700 mb-1">Priority</label>
                 <select
                   value={filters.priority}
-                  onChange={(e) => updateFilters({ priority: e.target.value as any })}
+                  onChange={(e) => updateFilters({ priority: e.target.value as 'all' | 'high' | 'medium' | 'low' })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
                   <option value="all">All Priorities</option>
@@ -268,7 +267,7 @@ export default function SmartDashboardLayout({
                 <label className="block text-xs font-medium text-gray-700 mb-1">Compliance</label>
                 <select
                   value={filters.compliance}
-                  onChange={(e) => updateFilters({ compliance: e.target.value as any })}
+                  onChange={(e) => updateFilters({ compliance: e.target.value as 'all' | 'compliant' | 'non-compliant' | 'partial' })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
                   <option value="all">All Status</option>
@@ -285,7 +284,7 @@ export default function SmartDashboardLayout({
                 <label className="block text-xs font-medium text-gray-700 mb-1">Sort By</label>
                 <select
                   value={filters.sortBy}
-                  onChange={(e) => updateFilters({ sortBy: e.target.value as any })}
+                  onChange={(e) => updateFilters({ sortBy: e.target.value as 'name' | 'added' | 'updated' | 'priority' | 'risk' })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
                   <option value="risk">Risk Level</option>
@@ -301,7 +300,7 @@ export default function SmartDashboardLayout({
                 <label className="block text-xs font-medium text-gray-700 mb-1">Group By</label>
                 <select
                   value={filters.groupBy}
-                  onChange={(e) => updateFilters({ groupBy: e.target.value as any })}
+                  onChange={(e) => updateFilters({ groupBy: e.target.value as 'none' | 'risk' | 'priority' | 'status' })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
                   <option value="none">No Grouping</option>

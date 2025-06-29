@@ -106,7 +106,7 @@ export function processAnalyticsData(savedCarriers: SavedCarrier[]): AnalyticsDa
     
     if (rating === 'unsatisfactory' || (!insurance && !authority) || priority === 'high') {
       riskLevel = 'highRisk'
-    } else if (rating === 'conditional' || !insurance || !authority || priority === 'high') {
+    } else if (rating === 'conditional' || !insurance || !authority || priority === 'medium') {
       riskLevel = 'mediumRisk'
     }
 

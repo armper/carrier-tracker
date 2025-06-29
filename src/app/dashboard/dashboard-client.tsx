@@ -226,18 +226,6 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
     await performCarrierDeletion(carrierToDelete.id, alertIds)
   }
 
-  const getSafetyRatingColor = (rating: string) => {
-    switch (rating.toLowerCase()) {
-      case 'satisfactory':
-        return 'bg-green-100 text-green-800'
-      case 'conditional':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'unsatisfactory':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
 
   const getPriorityColor = (priority: 'high' | 'medium' | 'low') => {
     switch (priority) {
@@ -503,9 +491,9 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
   }
 
   // Quick update functionality for inline editing
-  const handleQuickUpdate = async (carrierId: string, field: string, value: any) => {
+  const handleQuickUpdate = async (carrierId: string, field: string, value: unknown) => {
     try {
-      const updateData: any = {}
+      const updateData: Record<string, unknown> = {}
       updateData[field] = value
 
       const { error } = await supabase
@@ -518,7 +506,7 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
       // Update local state
       setCarriers(carriers.map(carrier => 
         carrier.id === carrierId 
-          ? { ...carrier, [field]: value, updated_at: new Date().toISOString() }
+          ? { ...carrier, [field]: value, updated_at: new Date().toISOString() } as SavedCarrier
           : carrier
       ))
 
@@ -527,7 +515,7 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
         title: 'Updated',
         message: `Carrier ${field} updated successfully.`
       })
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Quick update error:', error)
       addNotification({
         type: 'error',

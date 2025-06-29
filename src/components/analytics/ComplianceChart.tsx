@@ -25,7 +25,7 @@ export default function ComplianceChart({ analytics }: ComplianceChartProps) {
     )
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; value: number } }>; label?: string }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (

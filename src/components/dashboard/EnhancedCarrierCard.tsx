@@ -37,7 +37,7 @@ interface EnhancedCarrierCardProps {
   onSelect: (carrierId: string, checked: boolean) => void
   onRemove: (carrierId: string) => void
   onEdit: (savedCarrier: SavedCarrier) => void
-  onQuickUpdate: (carrierId: string, field: string, value: any) => void
+  onQuickUpdate: (carrierId: string, field: string, value: unknown) => void
 }
 
 export default function EnhancedCarrierCard({ 
