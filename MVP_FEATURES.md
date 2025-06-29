@@ -146,7 +146,7 @@ ALTER TABLE saved_carriers ADD COLUMN last_contacted DATE;
 - [x] Basic Alerts System
 - [x] Carrier Notes & Tags
 - [x] Search History
-- [ ] Dashboard Analytics
+- [x] Dashboard Analytics
 - [ ] Bulk Operations
 - [ ] Improved Landing Page
 - [ ] User Profile Page

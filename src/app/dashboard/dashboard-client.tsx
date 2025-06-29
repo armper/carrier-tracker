@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { exportToCSV, exportToExcel, exportToPDF } from '@/lib/export-utils'
 import { useNotifications } from '@/components/ui/notification'
+import { processAnalyticsData } from '@/lib/analytics'
+import AnalyticsSummary from '@/components/analytics/AnalyticsSummary'
+import SafetyRatingChart from '@/components/analytics/SafetyRatingChart'
+import ComplianceChart from '@/components/analytics/ComplianceChart'
 
 interface Carrier {
   id: string
@@ -48,6 +52,7 @@ interface Props {
 export default function DashboardClient({ user, savedCarriers, alertedCarrierIds }: Props) {
   const [carriers, setCarriers] = useState<SavedCarrier[]>(savedCarriers)
   const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false)
+  const [showAnalytics, setShowAnalytics] = useState(true)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [carrierToDelete, setCarrierToDelete] = useState<{ id: string, name: string, alertCount: number } | null>(null)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
@@ -62,6 +67,9 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
   const supabase = createClient()
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { addNotification } = useNotifications()
+
+  // Process analytics data
+  const analytics = processAnalyticsData(carriers)
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -379,6 +387,48 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
               </button>
             </div>
           </div>
+
+          {/* Analytics Section */}
+          {carriers.length > 0 && (
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Portfolio Analytics</h2>
+                <button
+                  onClick={() => setShowAnalytics(!showAnalytics)}
+                  className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
+                >
+                  {showAnalytics ? (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                      </svg>
+                      Hide Analytics
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                      Show Analytics
+                    </>
+                  )}
+                </button>
+              </div>
+              
+              {showAnalytics && (
+                <>
+                  {/* Summary Cards */}
+                  <AnalyticsSummary analytics={analytics} />
+                  
+                  {/* Charts Grid */}
+                  <div className="grid lg:grid-cols-2 gap-6">
+                    <SafetyRatingChart analytics={analytics} />
+                    <ComplianceChart analytics={analytics} />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           {carriers.length === 0 ? (
             <div className="text-center py-12">
