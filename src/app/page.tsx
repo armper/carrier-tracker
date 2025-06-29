@@ -119,10 +119,34 @@ export default function Home() {
                 </div>
               ) : user ? (
                 <>
-                  <span className="text-sm text-gray-600">Welcome, {user.email?.split('@')[0]}</span>
-                  <Link href="/dashboard" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                  <Link href="/search" className="px-4 py-2 text-gray-700 hover:text-gray-900">
+                    Search
+                  </Link>
+                  <Link href="/dashboard" className="px-4 py-2 text-gray-700 hover:text-gray-900">
                     Dashboard
                   </Link>
+                  <div className="relative group">
+                    <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900">
+                      <span className="text-sm">{user.email?.split('@')[0]}</span>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                      <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        Profile Settings
+                      </Link>
+                      <button
+                        onClick={async () => {
+                          await supabase.auth.signOut()
+                          setUser(null)
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
                 </>
               ) : (
                 <>
