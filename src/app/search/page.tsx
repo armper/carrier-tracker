@@ -115,38 +115,73 @@ export default function SearchPage() {
     setLoading(true)
     setSearched(true)
 
-    let queryBuilder = supabase.from('carriers').select('*')
+    let finalResults: Carrier[] = []
+    let searchFromFMCSA = false
 
-    // Apply text search if query exists
-    if (query.trim()) {
-      queryBuilder = queryBuilder.or(`dot_number.ilike.%${query}%,legal_name.ilike.%${query}%,dba_name.ilike.%${query}%`)
-    }
+    try {
+      // First, search our local database
+      let queryBuilder = supabase.from('carriers').select('*')
 
-    // Apply filters
-    if (filters.state) {
-      queryBuilder = queryBuilder.eq('state', filters.state)
-    }
-    if (filters.safetyRating) {
-      queryBuilder = queryBuilder.eq('safety_rating', filters.safetyRating)
-    }
-    if (filters.insuranceStatus) {
-      queryBuilder = queryBuilder.eq('insurance_status', filters.insuranceStatus)
-    }
+      // Apply text search if query exists
+      if (query.trim()) {
+        queryBuilder = queryBuilder.or(`dot_number.ilike.%${query}%,legal_name.ilike.%${query}%,dba_name.ilike.%${query}%`)
+      }
 
-    // Apply sorting
-    if (filters.sortBy) {
-      const ascending = filters.sortBy === 'legal_name' || filters.sortBy === 'state'
-      queryBuilder = queryBuilder.order(filters.sortBy, { ascending })
-    }
+      // Apply filters
+      if (filters.state) {
+        queryBuilder = queryBuilder.eq('state', filters.state)
+      }
+      if (filters.safetyRating) {
+        queryBuilder = queryBuilder.eq('safety_rating', filters.safetyRating)
+      }
+      if (filters.insuranceStatus) {
+        queryBuilder = queryBuilder.eq('insurance_status', filters.insuranceStatus)
+      }
 
-    queryBuilder = queryBuilder.limit(50)
+      // Apply sorting
+      if (filters.sortBy) {
+        const ascending = filters.sortBy === 'legal_name' || filters.sortBy === 'state'
+        queryBuilder = queryBuilder.order(filters.sortBy, { ascending })
+      }
 
-    const { data } = await queryBuilder
+      queryBuilder = queryBuilder.limit(50)
 
-    if (data) {
-      setCarriers(data)
+      const { data: localResults } = await queryBuilder
+      finalResults = localResults || []
+
+      // If we have a query that looks like a DOT number and found no local results, try FMCSA
+      const cleanQuery = query.trim().replace(/\D/g, '')
+      const isDotNumber = cleanQuery.length >= 6 && cleanQuery.length <= 8 && !isNaN(Number(cleanQuery))
+      
+      if (isDotNumber && finalResults.length === 0) {
+        try {
+          // Query FMCSA for this DOT number
+          const fmcsaResponse = await fetch(`/api/carriers/lookup?dot=${cleanQuery}`)
+          const fmcsaData = await fmcsaResponse.json()
+          
+          if (fmcsaData.success && fmcsaData.data) {
+            finalResults = [fmcsaData.data]
+            searchFromFMCSA = true
+            
+            // Show notification about FMCSA fetch
+            addNotification({
+              type: 'success',
+              title: 'Carrier Found!',
+              message: `Retrieved fresh data from FMCSA for DOT ${cleanQuery}`
+            })
+          }
+        } catch (fmcsaError) {
+          console.error('FMCSA lookup failed:', fmcsaError)
+          // Don't show error to user - just continue with empty results
+        }
+      }
+
+      // Set results
+      setCarriers(finalResults)
+      
       // Save search to history and update recent searches
-      await saveSearchHistory(query, filters, data.length)
+      await saveSearchHistory(query, filters, finalResults.length)
+      
       // Add to recent searches state (avoid duplicates)
       if (query.trim()) {
         setRecentSearches(prev => {
@@ -154,7 +189,7 @@ export default function SearchPage() {
             id: Date.now().toString(),
             query: query.trim(),
             filters,
-            results_count: data.length,
+            results_count: finalResults.length,
             created_at: new Date().toISOString()
           }
           // Remove existing search with same query and add new one at top
@@ -162,6 +197,32 @@ export default function SearchPage() {
           return [newSearch, ...filtered].slice(0, 10)
         })
       }
+
+      // Show helpful message if still no results
+      if (finalResults.length === 0 && query.trim()) {
+        if (isDotNumber) {
+          addNotification({
+            type: 'info',
+            title: 'No Results',
+            message: `DOT number ${cleanQuery} not found in FMCSA database. Please verify the number is correct.`
+          })
+        } else {
+          addNotification({
+            type: 'info',
+            title: 'No Results',
+            message: 'No carriers found. Try searching by DOT number for exact matches.'
+          })
+        }
+      }
+
+    } catch (error) {
+      console.error('Search error:', error)
+      addNotification({
+        type: 'error',
+        title: 'Search Failed',
+        message: 'An error occurred during search. Please try again.'
+      })
+      setCarriers([])
     }
 
     setLoading(false)
