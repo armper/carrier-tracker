@@ -61,6 +61,7 @@ export default function ProfileClient({ user, profile }: Props) {
         .from('profiles')
         .upsert({
           id: user.id,
+          email: user.email!,
           full_name: profileForm.name.trim() || null,
           company_name: profileForm.company.trim() || null,
           updated_at: new Date().toISOString()
