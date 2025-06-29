@@ -22,6 +22,13 @@ export default function CarriersManagement({ initialCarriers }: Props) {
   const [carriers, setCarriers] = useState<Carrier[]>(initialCarriers)
   const [lookupDot, setLookupDot] = useState('')
   const [lookupLoading, setLookupLoading] = useState(false)
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean
+    type: 'lookup' | 'refresh'
+    carrier?: Carrier
+    dotNumber?: string
+    previewData?: any
+  }>({ show: false, type: 'lookup' })
   const { addNotification } = useNotifications()
 
   const handleFMCSALookup = async () => {
@@ -44,43 +51,20 @@ export default function CarriersManagement({ initialCarriers }: Props) {
       return
     }
 
+    // First, fetch the data to show in preview
     setLookupLoading(true)
-
     try {
       const response = await fetch(`/api/carriers/lookup?dot=${cleanDot}&refresh=true`)
       const data = await response.json()
 
       if (data.success && data.data) {
-        // Check if this carrier already exists in our list
-        const existingIndex = carriers.findIndex(c => c.dot_number === cleanDot)
-        
-        if (existingIndex >= 0) {
-          // Update existing carrier
-          const updatedCarriers = [...carriers]
-          updatedCarriers[existingIndex] = {
-            ...updatedCarriers[existingIndex],
-            ...data.data,
-            trust_score: data.data.trust_score || 95
-          }
-          setCarriers(updatedCarriers)
-          
-          addNotification({
-            type: 'success',
-            title: 'Carrier Updated',
-            message: `Updated ${data.data.legal_name} with fresh FMCSA data`
-          })
-        } else {
-          // Add new carrier to list
-          setCarriers(prev => [data.data, ...prev])
-          
-          addNotification({
-            type: 'success',
-            title: 'Carrier Added',
-            message: `Added ${data.data.legal_name} from FMCSA database`
-          })
-        }
-
-        setLookupDot('')
+        // Show confirmation modal with preview data
+        setConfirmModal({
+          show: true,
+          type: 'lookup',
+          dotNumber: cleanDot,
+          previewData: data.data
+        })
       } else {
         addNotification({
           type: 'error',
@@ -101,24 +85,19 @@ export default function CarriersManagement({ initialCarriers }: Props) {
   }
 
   const refreshCarrierData = async (carrier: Carrier) => {
+    // First, fetch fresh data to show in preview
     setLookupLoading(true)
-
     try {
       const response = await fetch(`/api/carriers/lookup?dot=${carrier.dot_number}&refresh=true`)
       const data = await response.json()
 
       if (data.success && data.data) {
-        // Update the carrier in our list
-        setCarriers(prev => prev.map(c => 
-          c.id === carrier.id 
-            ? { ...c, ...data.data, trust_score: data.data.trust_score || 95 }
-            : c
-        ))
-        
-        addNotification({
-          type: 'success',
-          title: 'Data Refreshed',
-          message: `Updated ${data.data.legal_name} with latest FMCSA data`
+        // Show confirmation modal with preview data
+        setConfirmModal({
+          show: true,
+          type: 'refresh',
+          carrier,
+          previewData: data.data
         })
       } else {
         addNotification({
@@ -137,6 +116,63 @@ export default function CarriersManagement({ initialCarriers }: Props) {
     } finally {
       setLookupLoading(false)
     }
+  }
+
+  const confirmLookup = async () => {
+    const { previewData, dotNumber } = confirmModal
+    if (!previewData) return
+
+    // Check if this carrier already exists in our list
+    const existingIndex = carriers.findIndex(c => c.dot_number === dotNumber)
+    
+    if (existingIndex >= 0) {
+      // Update existing carrier
+      const updatedCarriers = [...carriers]
+      updatedCarriers[existingIndex] = {
+        ...updatedCarriers[existingIndex],
+        ...previewData,
+        trust_score: previewData.trust_score || 95
+      }
+      setCarriers(updatedCarriers)
+      
+      addNotification({
+        type: 'success',
+        title: 'Carrier Updated',
+        message: `Updated ${previewData.legal_name} with fresh FMCSA data`
+      })
+    } else {
+      // Add new carrier to list
+      setCarriers(prev => [previewData, ...prev])
+      
+      addNotification({
+        type: 'success',
+        title: 'Carrier Added',
+        message: `Added ${previewData.legal_name} from FMCSA database`
+      })
+    }
+
+    setLookupDot('')
+    setConfirmModal({ show: false, type: 'lookup' })
+  }
+
+  const confirmRefresh = async () => {
+    const { carrier, previewData } = confirmModal
+    if (!carrier || !previewData) return
+
+    // Update the carrier in our list
+    setCarriers(prev => prev.map(c => 
+      c.id === carrier.id 
+        ? { ...c, ...previewData, trust_score: previewData.trust_score || 95 }
+        : c
+    ))
+    
+    addNotification({
+      type: 'success',
+      title: 'Data Refreshed',
+      message: `Updated ${previewData.legal_name} with latest FMCSA data`
+    })
+
+    setConfirmModal({ show: false, type: 'refresh' })
   }
 
   return (
@@ -328,6 +364,145 @@ export default function CarriersManagement({ initialCarriers }: Props) {
           )}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {confirmModal.type === 'lookup' ? 'Confirm FMCSA Lookup' : 'Confirm Data Refresh'}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {confirmModal.type === 'lookup' 
+                  ? 'Review the data from FMCSA before adding/updating this carrier'
+                  : 'Review the updated data before applying changes to the carrier'
+                }
+              </p>
+            </div>
+
+            <div className="px-6 py-4">
+              {confirmModal.previewData && (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-blue-900 mb-2">📋 FMCSA Data Preview</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-700">DOT Number:</span>
+                        <span className="ml-2 text-gray-900">{confirmModal.previewData.dot_number}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Legal Name:</span>
+                        <span className="ml-2 text-gray-900">{confirmModal.previewData.legal_name || 'Not provided'}</span>
+                      </div>
+                      {confirmModal.previewData.dba_name && (
+                        <div>
+                          <span className="font-medium text-gray-700">DBA Name:</span>
+                          <span className="ml-2 text-gray-900">{confirmModal.previewData.dba_name}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="font-medium text-gray-700">Safety Rating:</span>
+                        <span className="ml-2 text-gray-900">{confirmModal.previewData.safety_rating || 'Not rated'}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Insurance Status:</span>
+                        <span className="ml-2 text-gray-900">{confirmModal.previewData.insurance_status || 'Unknown'}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Authority Status:</span>
+                        <span className="ml-2 text-gray-900">{confirmModal.previewData.authority_status || 'Unknown'}</span>
+                      </div>
+                      {confirmModal.previewData.physical_address && (
+                        <div className="md:col-span-2">
+                          <span className="font-medium text-gray-700">Physical Address:</span>
+                          <span className="ml-2 text-gray-900">{confirmModal.previewData.physical_address}</span>
+                        </div>
+                      )}
+                      {confirmModal.previewData.phone && (
+                        <div>
+                          <span className="font-medium text-gray-700">Phone:</span>
+                          <span className="ml-2 text-gray-900">{confirmModal.previewData.phone}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="font-medium text-gray-700">Data Source:</span>
+                        <span className="ml-2">
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            FMCSA
+                          </span>
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Trust Score:</span>
+                        <span className="ml-2 text-green-600 font-semibold">{confirmModal.previewData.trust_score || 95}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {confirmModal.type === 'refresh' && confirmModal.carrier && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-2">📊 Current Data (for comparison)</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="font-medium text-gray-700">Current Legal Name:</span>
+                          <span className="ml-2 text-gray-900">{confirmModal.carrier.legal_name}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-700">Current Source:</span>
+                          <span className="ml-2">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              confirmModal.carrier.data_source === 'manual' 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-green-100 text-green-800'
+                            }`}>
+                              {confirmModal.carrier.data_source || 'manual'}
+                            </span>
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-700">Current Trust Score:</span>
+                          <span className="ml-2 text-gray-600">{confirmModal.carrier.trust_score || 50}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-yellow-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-yellow-900 mb-2">⚠️ Action Summary</h4>
+                    <p className="text-sm text-yellow-800">
+                      {confirmModal.type === 'lookup' 
+                        ? carriers.find(c => c.dot_number === confirmModal.dotNumber)
+                          ? `This will update the existing carrier "${carriers.find(c => c.dot_number === confirmModal.dotNumber)?.legal_name}" with fresh FMCSA data.`
+                          : `This will add "${confirmModal.previewData.legal_name}" as a new carrier to your database.`
+                        : `This will update "${confirmModal.carrier?.legal_name}" with the latest FMCSA data shown above.`
+                      }
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmModal({ show: false, type: 'lookup' })}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmModal.type === 'lookup' ? confirmLookup : confirmRefresh}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                {confirmModal.type === 'lookup' 
+                  ? carriers.find(c => c.dot_number === confirmModal.dotNumber) ? 'Update Carrier' : 'Add Carrier'
+                  : 'Refresh Data'
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
