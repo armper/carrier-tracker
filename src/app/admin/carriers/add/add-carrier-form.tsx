@@ -31,6 +31,12 @@ interface CarrierFormData {
   vehicle_count: string
   admin_notes: string
   verified: boolean
+  // Insurance tracking fields
+  insurance_expiry_date: string
+  insurance_carrier: string
+  insurance_policy_number: string
+  insurance_amount: string
+  insurance_effective_date: string
 }
 
 export default function AddCarrierForm({ user }: Props) {
@@ -49,7 +55,13 @@ export default function AddCarrierForm({ user }: Props) {
     city: '',
     vehicle_count: '',
     admin_notes: '',
-    verified: true
+    verified: true,
+    // Insurance tracking fields
+    insurance_expiry_date: '',
+    insurance_carrier: '',
+    insurance_policy_number: '',
+    insurance_amount: '',
+    insurance_effective_date: ''
   })
   const [loading, setLoading] = useState(false)
   const [checkingDuplicate, setCheckingDuplicate] = useState(false)
@@ -169,7 +181,14 @@ export default function AddCarrierForm({ user }: Props) {
         trust_score: formData.verified ? 90 : 70,
         admin_notes: formData.admin_notes.trim() || null,
         created_by_admin: user.id,
-        last_manual_update: new Date().toISOString()
+        last_manual_update: new Date().toISOString(),
+        // Insurance tracking fields
+        insurance_expiry_date: formData.insurance_expiry_date || null,
+        insurance_carrier: formData.insurance_carrier.trim() || null,
+        insurance_policy_number: formData.insurance_policy_number.trim() || null,
+        insurance_amount: formData.insurance_amount ? parseFloat(formData.insurance_amount) : null,
+        insurance_effective_date: formData.insurance_effective_date || null,
+        insurance_last_verified: formData.insurance_expiry_date || formData.insurance_effective_date ? new Date().toISOString() : null
       }
 
       // Check current user and admin status
@@ -509,6 +528,90 @@ export default function AddCarrierForm({ user }: Props) {
                 <span className="ml-2 text-sm text-gray-700">CARB Compliant</span>
               </label>
             </div>
+          </div>
+
+          {/* Insurance Information */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Insurance Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Insurance Carrier
+                </label>
+                <input
+                  type="text"
+                  name="insurance_carrier"
+                  value={formData.insurance_carrier}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Progressive Commercial, State Farm, etc."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Policy Number
+                </label>
+                <input
+                  type="text"
+                  name="insurance_policy_number"
+                  value={formData.insurance_policy_number}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="POL-123456789"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Coverage Amount ($)
+                </label>
+                <input
+                  type="number"
+                  name="insurance_amount"
+                  value={formData.insurance_amount}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="1000000"
+                  min="0"
+                  step="1000"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Effective Date
+                </label>
+                <input
+                  type="date"
+                  name="insurance_effective_date"
+                  value={formData.insurance_effective_date}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Expiry Date
+                </label>
+                <input
+                  type="date"
+                  name="insurance_expiry_date"
+                  value={formData.insurance_expiry_date}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            
+            {formData.insurance_expiry_date && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> Setting an expiry date will automatically create insurance alerts for 30, 15, 7, and 1 day notifications.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Admin Notes & Verification */}

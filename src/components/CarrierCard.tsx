@@ -19,6 +19,13 @@ interface Carrier {
   data_source?: string
   verified?: boolean
   trust_score?: number
+  // Insurance tracking fields
+  insurance_expiry_date?: string | null
+  insurance_carrier?: string | null
+  insurance_policy_number?: string | null
+  insurance_amount?: number | null
+  insurance_effective_date?: string | null
+  insurance_last_verified?: string | null
 }
 
 interface CarrierCardProps {
@@ -40,6 +47,52 @@ export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton 
         return 'bg-red-100 text-red-800'
       default:
         return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getInsuranceStatus = () => {
+    if (!carrier.insurance_expiry_date) {
+      return {
+        status: carrier.insurance_status,
+        color: carrier.insurance_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
+        warning: null
+      }
+    }
+
+    const expiryDate = new Date(carrier.insurance_expiry_date)
+    const today = new Date()
+    const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    
+    if (daysUntilExpiry < 0) {
+      return {
+        status: 'EXPIRED',
+        color: 'bg-red-100 text-red-800',
+        warning: `Expired ${Math.abs(daysUntilExpiry)} days ago`
+      }
+    } else if (daysUntilExpiry <= 7) {
+      return {
+        status: 'Expires Soon',
+        color: 'bg-red-100 text-red-800',
+        warning: `Expires in ${daysUntilExpiry} days`
+      }
+    } else if (daysUntilExpiry <= 15) {
+      return {
+        status: 'Expires Soon',
+        color: 'bg-orange-100 text-orange-800',
+        warning: `Expires in ${daysUntilExpiry} days`
+      }
+    } else if (daysUntilExpiry <= 30) {
+      return {
+        status: 'Active',
+        color: 'bg-yellow-100 text-yellow-800',
+        warning: `Expires in ${daysUntilExpiry} days`
+      }
+    } else {
+      return {
+        status: 'Active',
+        color: 'bg-green-100 text-green-800',
+        warning: null
+      }
     }
   }
 
@@ -114,11 +167,14 @@ export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton 
           
           <div>
             <span className="text-sm text-gray-600 block mb-1">Insurance</span>
-            <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-              carrier.insurance_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
-              {carrier.insurance_status}
+            <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getInsuranceStatus().color}`}>
+              {getInsuranceStatus().status}
             </div>
+            {getInsuranceStatus().warning && (
+              <div className="text-xs text-red-600 mt-1 font-medium">
+                ⚠️ {getInsuranceStatus().warning}
+              </div>
+            )}
           </div>
           
           <div>

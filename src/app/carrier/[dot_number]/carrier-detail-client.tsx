@@ -17,6 +17,13 @@ interface Carrier {
   state: string | null
   city: string | null
   vehicle_count: number | null
+  // Insurance tracking fields
+  insurance_expiry_date: string | null
+  insurance_carrier: string | null
+  insurance_policy_number: string | null
+  insurance_amount: number | null
+  insurance_effective_date: string | null
+  insurance_last_verified: string | null
 }
 
 interface CarrierDetailClientProps {
@@ -300,6 +307,74 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
             </div>
           </div>
         </div>
+
+        {/* Insurance Information */}
+        {(carrier.insurance_expiry_date || carrier.insurance_carrier || carrier.insurance_policy_number || carrier.insurance_amount) && (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Insurance Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {carrier.insurance_carrier && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Insurance Carrier</label>
+                  <p className="text-gray-900">{carrier.insurance_carrier}</p>
+                </div>
+              )}
+              
+              {carrier.insurance_policy_number && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Policy Number</label>
+                  <p className="text-gray-900 font-mono">{carrier.insurance_policy_number}</p>
+                </div>
+              )}
+              
+              {carrier.insurance_amount && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Coverage Amount</label>
+                  <p className="text-gray-900">${carrier.insurance_amount.toLocaleString()}</p>
+                </div>
+              )}
+              
+              {carrier.insurance_effective_date && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Effective Date</label>
+                  <p className="text-gray-900">{new Date(carrier.insurance_effective_date).toLocaleDateString()}</p>
+                </div>
+              )}
+              
+              {carrier.insurance_expiry_date && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                  <div className="flex items-center gap-2">
+                    <p className="text-gray-900">{new Date(carrier.insurance_expiry_date).toLocaleDateString()}</p>
+                    {(() => {
+                      const expiryDate = new Date(carrier.insurance_expiry_date)
+                      const today = new Date()
+                      const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                      
+                      if (daysUntilExpiry < 0) {
+                        return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded border border-red-200">EXPIRED</span>
+                      } else if (daysUntilExpiry <= 7) {
+                        return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded border border-red-200">Expires in {daysUntilExpiry} days</span>
+                      } else if (daysUntilExpiry <= 15) {
+                        return <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded border border-orange-200">Expires in {daysUntilExpiry} days</span>
+                      } else if (daysUntilExpiry <= 30) {
+                        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded border border-yellow-200">Expires in {daysUntilExpiry} days</span>
+                      }
+                      return null
+                    })()}
+                  </div>
+                </div>
+              )}
+              
+              {carrier.insurance_last_verified && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Verified</label>
+                  <p className="text-gray-900">{new Date(carrier.insurance_last_verified).toLocaleDateString()}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Sidebar */}

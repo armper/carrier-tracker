@@ -37,6 +37,7 @@ interface Props {
 const ALERT_TYPES = [
   { value: 'safety_rating_change', label: 'Safety Rating Changes' },
   { value: 'insurance_status_change', label: 'Insurance Status Changes' },
+  { value: 'insurance_expiration', label: 'Insurance Expiration Warnings' },
   { value: 'authority_status_change', label: 'Authority Status Changes' },
   { value: 'carb_compliance_change', label: 'CARB Compliance Changes' },
   { value: 'all_changes', label: 'Any Status Changes' },
@@ -340,6 +341,33 @@ export default function AlertsClient({ user, alerts, savedCarriers }: Props) {
           )}
         </div>
 
+        {/* Insurance Expiration Alerts Info */}
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mt-8">
+          <div className="flex items-start gap-3">
+            <svg className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-orange-900">Insurance Expiration Monitoring</h3>
+                <Link href="/profile" className="text-sm text-orange-700 hover:text-orange-900 underline">
+                  Manage Preferences →
+                </Link>
+              </div>
+              <p className="text-sm text-orange-800 mb-3">
+                In addition to status change alerts, you can receive automatic insurance expiration warnings at 30, 15, 7, and 1 day intervals.
+              </p>
+              <div className="text-xs text-orange-700">
+                <strong>Two Alert Systems:</strong>
+                <ul className="mt-1 space-y-1 ml-4">
+                  <li>• <strong>Status Alerts</strong> (this page): Notifies when insurance status changes from Active to Inactive</li>
+                  <li>• <strong>Expiration Alerts</strong> (automatic): Warns before insurance expires to prevent lapses</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Email Settings Info */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mt-8">
           <div className="flex items-start gap-3">
@@ -347,7 +375,7 @@ export default function AlertsClient({ user, alerts, savedCarriers }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <h3 className="font-semibold text-blue-900 mb-2">How Email Alerts Work</h3>
+              <h3 className="font-semibold text-blue-900 mb-2">How Status Change Alerts Work</h3>
               <ul className="text-sm text-blue-800 space-y-1">
                 <li>• Alerts are checked daily for status changes</li>
                 <li>• You&apos;ll receive an email within 24 hours of any detected changes</li>
