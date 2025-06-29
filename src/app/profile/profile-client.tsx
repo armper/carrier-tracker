@@ -17,8 +17,8 @@ interface User {
 
 interface Profile {
   id: string
-  name: string | null
-  company: string | null
+  full_name: string | null
+  company_name: string | null
   updated_at: string
 }
 
@@ -32,8 +32,8 @@ export default function ProfileClient({ user, profile }: Props) {
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [profileForm, setProfileForm] = useState({
-    name: profile?.name || user.user_metadata?.name || '',
-    company: profile?.company || user.user_metadata?.company || '',
+    name: profile?.full_name || user.user_metadata?.name || '',
+    company: profile?.company_name || user.user_metadata?.company || '',
     email: user.email || ''
   })
   const [passwordForm, setPasswordForm] = useState({
@@ -61,8 +61,8 @@ export default function ProfileClient({ user, profile }: Props) {
         .from('profiles')
         .upsert({
           id: user.id,
-          name: profileForm.name.trim() || null,
-          company: profileForm.company.trim() || null,
+          full_name: profileForm.name.trim() || null,
+          company_name: profileForm.company.trim() || null,
           updated_at: new Date().toISOString()
         })
 
@@ -83,7 +83,8 @@ export default function ProfileClient({ user, profile }: Props) {
       router.refresh()
     } catch (error: any) {
       console.error('Profile update error:', error)
-      addNotification(error.message || 'Failed to update profile', 'error')
+      const errorMessage = error?.message || error?.details || 'Failed to update profile'
+      addNotification(errorMessage, 'error')
     } finally {
       setLoading(false)
     }
@@ -230,8 +231,8 @@ export default function ProfileClient({ user, profile }: Props) {
                     onClick={() => {
                       setIsEditing(false)
                       setProfileForm({
-                        name: profile?.name || user.user_metadata?.name || '',
-                        company: profile?.company || user.user_metadata?.company || '',
+                        name: profile?.full_name || user.user_metadata?.name || '',
+                        company: profile?.company_name || user.user_metadata?.company || '',
                         email: user.email || ''
                       })
                     }}
