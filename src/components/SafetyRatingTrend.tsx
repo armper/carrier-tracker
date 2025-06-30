@@ -66,7 +66,8 @@ export default function SafetyRatingTrend({ carrierId, showTitle = true, compact
     }
   }
 
-  const getRatingColor = (rating: string) => {
+  const getRatingColor = (rating: string | null | undefined) => {
+    if (!rating) return 'bg-gray-400'
     switch (rating.toLowerCase()) {
       case 'satisfactory':
         return 'bg-green-500'
@@ -79,7 +80,8 @@ export default function SafetyRatingTrend({ carrierId, showTitle = true, compact
     }
   }
 
-  const getRatingTextColor = (rating: string) => {
+  const getRatingTextColor = (rating: string | null | undefined) => {
+    if (!rating) return 'text-gray-800'
     switch (rating.toLowerCase()) {
       case 'satisfactory':
         return 'text-green-800'
@@ -169,6 +171,7 @@ export default function SafetyRatingTrend({ carrierId, showTitle = true, compact
               value={selectedMonths}
               onChange={(e) => setSelectedMonths(parseInt(e.target.value))}
               className="text-sm border border-gray-300 rounded-md px-2 py-1"
+              aria-label="Select months range for safety rating history"
             >
               <option value={6}>Last 6 months</option>
               <option value={12}>Last 12 months</option>

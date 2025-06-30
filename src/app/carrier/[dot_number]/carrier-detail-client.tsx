@@ -50,12 +50,17 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
     const checkSavedStatus = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data: savedCarrier } = await supabase
+        const { data: savedCarrier, error } = await supabase
           .from('saved_carriers')
           .select('id')
           .eq('user_id', user.id)
           .eq('carrier_id', carrier.id)
-          .single()
+          .maybeSingle()
+        
+        // If error is PGRST116 (no rows), that's expected when carrier is not saved
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error checking saved status:', error)
+        }
         
         setIsSaved(!!savedCarrier)
       }
@@ -477,6 +482,7 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
                   value={reportData.issue_type}
                   onChange={(e) => setReportData(prev => ({ ...prev, issue_type: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                  aria-label="Select issue type"
                 >
                   <option value="">Select an issue type</option>
                   <option value="incorrect_name">Incorrect Company Name</option>
