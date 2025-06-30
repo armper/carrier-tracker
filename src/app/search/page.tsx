@@ -53,6 +53,7 @@ export default function SearchPage() {
     sortBy: '',
     carriersOnly: true // Default to carriers only
   })
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
   const supabase = createClient()
   const { addNotification } = useNotifications()
@@ -264,6 +265,7 @@ export default function SearchPage() {
       sortBy: '',
       carriersOnly: true // Reset to default carriers only
     })
+    setShowAdvancedFilters(false) // Close advanced filters when clearing
   }
 
   const handleRecentSearchClick = (search: typeof recentSearches[0]) => {
@@ -509,47 +511,120 @@ export default function SearchPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <form onSubmit={handleSearch} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search by DOT Number or Company Name
+        {/* Hero Search Section - Simple & Prominent */}
+        <div className="bg-white rounded-lg shadow-md p-8 mb-6">
+          <form onSubmit={handleSearch}>
+            {/* Primary Search Input */}
+            <div className="mb-6">
+              <label className="block text-lg font-medium text-gray-900 mb-3">
+                Find Transportation Carriers
               </label>
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Enter DOT number or company name..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter company name or DOT number (e.g., 'Swift Transportation' or '123456')"
+                className="w-full px-5 py-4 text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
 
-            <div>
-              <SearchFilters
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                onClearFilters={handleClearFilters}
-              />
-            </div>
-
-            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-              <div className="text-sm text-gray-600">
-                {Object.values(filters).filter(value => value !== '').length > 0 && (
-                  <span>
-                    {Object.values(filters).filter(value => value !== '').length} filter(s) active
-                  </span>
-                )}
+            {/* Quick Filters Row - Most Common Options */}
+            <div className="flex flex-wrap items-center gap-4 mb-6">
+              {/* State Filter - Most Common */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Filter by state:
+                </label>
+                <select
+                  value={filters.state}
+                  onChange={(e) => handleFilterChange({ ...filters, state: e.target.value })}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">All States</option>
+                  {['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'].map(state => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
               </div>
+
+              {/* Advanced Filters Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                </svg>
+                More Filters
+                <svg className={`w-4 h-4 transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Active Filters Indicator */}
+              {(filters.state || filters.safetyRating || filters.insuranceStatus || filters.sortBy || !filters.carriersOnly) && (
+                <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
+                  {[filters.state, filters.safetyRating, filters.insuranceStatus, filters.sortBy].filter(v => v !== '').length + (!filters.carriersOnly ? 1 : 0)} filter(s) active
+                </span>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3">
               <button
                 type="submit"
                 disabled={loading}
-                className="px-8 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 font-medium"
+                className="flex-1 min-w-[200px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
-                {loading ? 'Searching...' : 'Search Carriers'}
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Searching...
+                  </span>
+                ) : (
+                  'Search Carriers'
+                )}
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('')
+                  performSearch()
+                }}
+                disabled={loading}
+                className="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
+              >
+                Browse All
               </button>
             </div>
           </form>
         </div>
+
+        {/* Advanced Filters Section - Collapsible */}
+        {showAdvancedFilters && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6 border-t-4 border-blue-500">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Advanced Filters</h3>
+              <button
+                onClick={handleClearFilters}
+                className="text-sm text-red-600 hover:text-red-800 font-medium"
+              >
+                Clear All Filters
+              </button>
+            </div>
+            
+            <SearchFilters
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
+        )}
 
         {/* Getting Started Hint - Only show when no search has been performed */}
         {!searched && (
