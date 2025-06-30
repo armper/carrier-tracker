@@ -551,6 +551,41 @@ export default function SearchPage() {
           </form>
         </div>
 
+        {/* Getting Started Hint - Only show when no search has been performed */}
+        {!searched && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-6 mb-8">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Ready to find carriers?</h3>
+                <div className="space-y-3 text-sm text-gray-700">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-medium">1</span>
+                    <span><strong>Quick start:</strong> Click "Search Carriers" below to browse our database</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-medium">2</span>
+                    <span><strong>Targeted search:</strong> Enter a DOT number (e.g., 123456) or company name</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-medium">3</span>
+                    <span><strong>Refine results:</strong> Use filters above to narrow by state, safety rating, or insurance status</span>
+                  </div>
+                </div>
+                <div className="mt-4 p-3 bg-blue-100 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    <span className="font-medium">💡 Pro tip:</span> The "Carriers Only" filter is enabled by default to show motor carriers relevant to freight brokers. Toggle it off to see all entity types.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {searched && (
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
