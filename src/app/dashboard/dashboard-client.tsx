@@ -13,6 +13,7 @@ import ComplianceChart from '@/components/analytics/ComplianceChart'
 import EnhancedCarrierCard from '@/components/dashboard/EnhancedCarrierCard'
 import SmartDashboardLayout from '@/components/dashboard/SmartDashboardLayout'
 import SmartSuggestions from '@/components/SmartSuggestions'
+import { isCarrierEntity } from '@/lib/carrier-filter'
 
 interface Carrier {
   id: string
@@ -57,6 +58,7 @@ interface DashboardFilters {
   tags: string[]
   sortBy: 'name' | 'added' | 'updated' | 'priority' | 'risk'
   groupBy: 'none' | 'risk' | 'priority' | 'status'
+  carriersOnly: boolean
 }
 
 interface Props {
@@ -76,7 +78,8 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
     compliance: 'all',
     tags: [],
     sortBy: 'risk',
-    groupBy: 'risk'
+    groupBy: 'risk',
+    carriersOnly: true
   })
   const [viewMode, setViewMode] = useState<'compact' | 'detailed'>('detailed')
   const [activeTab, setActiveTab] = useState<'carriers' | 'analytics'>('carriers')
@@ -600,6 +603,16 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
       filtered = filtered.filter(c => 
         c.tags && c.tags.some(tag => dashboardFilters.tags.includes(tag))
       )
+    }
+
+    // Apply carriers only filter
+    if (dashboardFilters.carriersOnly) {
+      filtered = filtered.filter(c => {
+        if (!c.carriers?.entity_type) {
+          return true // Include carriers with no entity type (legacy data)
+        }
+        return isCarrierEntity({ entity_type: c.carriers.entity_type })
+      })
     }
 
     // Sort carriers

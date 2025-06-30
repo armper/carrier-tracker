@@ -5,6 +5,8 @@
  * It provides functionality to lookup carriers by DOT number and parse the response data.
  */
 
+import * as cheerio from 'cheerio'
+
 export interface FMCSACarrierData {
   dotNumber: string
   legalName: string | null
@@ -167,18 +169,47 @@ export class FMCSAService {
    */
   private parseCarrierHTML(html: string, dotNumber: string): FMCSACarrierData | null {
     try {
-      // Basic HTML parsing - looking for key data patterns
+      // Load HTML into Cheerio for DOM parsing
+      const $ = cheerio.load(html)
+
       const data: Partial<FMCSACarrierData> = {
         dotNumber,
         dataSource: 'fmcsa',
         lastUpdated: new Date().toISOString()
       }
 
+      // Helper function to clean text
+      const cleanText = (text: string | null): string | undefined => {
+        if (!text) return undefined
+        return text
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .trim()
+      }
+
+      // Helper function to extract table values using DOM selectors
+      const extractTableValue = (label: string): string | null => {
+        // Look for table rows containing the label
+        const row = $(`th:contains("${label}"), td:contains("${label}")`).closest('tr')
+        if (row.length === 0) return null
+
+        // Get the corresponding data cell
+        const dataCell = row.find('td').not(':contains("' + label + '")').first()
+        if (dataCell.length === 0) return null
+
+        // Extract text content, handling nested tags
+        const text = dataCell.text().trim()
+        return text || null
+      }
+
       // Check if page requires JavaScript (common with FMCSA)
       if (html.includes('This page requires scripting to be enabled') && !html.includes('Legal Name')) {
         // Only use JavaScript fallback if we can't find any data in the HTML
         // Try to extract from page title as fallback
-        const titleMatch = html.match(/<TITLE>SAFER Web - Company Snapshot[^>]*?\s+([^<]+)<\/TITLE>/i)
+        const title = $('title').text()
+        const titleMatch = title.match(/SAFER Web - Company Snapshot\s+(.+)/i)
         if (titleMatch) {
           const titleName = titleMatch[1].trim()
           if (titleName && 
@@ -195,64 +226,57 @@ export class FMCSAService {
           }
         }
       } else {
-        // Normal HTML parsing for non-JavaScript pages
+        // Normal HTML parsing for non-JavaScript pages using Cheerio
         
-        // Extract legal name with better patterns
-        const legalNameMatch = html.match(/Legal Name[:\s]*<[^>]*>([^<]+)</i) ||
-                           html.match(/Legal Name[:\s]*([^<\n\r]+)/i)
-        if (legalNameMatch) {
-          const name = legalNameMatch[1].trim()
+        // Extract legal name
+        const legalName = extractTableValue('Legal Name')
+        if (legalName) {
+          const name = cleanText(legalName)
           if (name && name !== ':' && name.length > 2) {
             data.legalName = name
           }
         }
 
-        // Extract DBA name with better patterns
-        const dbaMatch = html.match(/DBA Name[:\s]*<[^>]*>([^<]+)</i) ||
-                      html.match(/DBA Name[:\s]*([^<\n\r]+)/i)
-        if (dbaMatch) {
-          const dba = dbaMatch[1].trim()
+        // Extract DBA name
+        const dbaName = extractTableValue('DBA Name')
+        if (dbaName) {
+          const dba = cleanText(dbaName)
           if (dba && dba !== ':' && dba.length > 2) {
             data.dbaName = dba
           }
         }
 
         // Extract physical address
-        const addressMatch = html.match(/Physical Address[:\s]*<[^>]*>([^<]+)</i) ||
-                           html.match(/Physical Address[:\s]*([^<\n\r]+)/i)
-        if (addressMatch) {
-          const address = addressMatch[1].replace(/\s+/g, ' ').trim()
-          if (address && address !== ':' && address.length > 3) {
-            data.physicalAddress = address
+        const address = extractTableValue('Physical Address')
+        if (address) {
+          const cleanAddress = cleanText(address)
+          if (cleanAddress && cleanAddress !== ':' && cleanAddress.length > 3) {
+            data.physicalAddress = cleanAddress
           }
         }
 
-        // Extract phone with better validation
-        const phoneMatch = html.match(/Phone[:\s]*<[^>]*>([^<]+)</i) ||
-                         html.match(/Phone[:\s]*([^<\n\r]+)/i)
-        if (phoneMatch) {
-          const phone = phoneMatch[1].trim()
-          if (phone && phone !== ':' && phone !== '">Phone:' && phone.length > 5) {
-            data.phone = phone
+        // Extract phone
+        const phone = extractTableValue('Phone')
+        if (phone) {
+          const cleanPhone = cleanText(phone)
+          if (cleanPhone && cleanPhone !== ':' && cleanPhone !== '">Phone:' && cleanPhone.length > 5) {
+            data.phone = cleanPhone
           }
         }
 
         // Extract safety rating
-        const safetyMatch = html.match(/Safety Rating[:\s]*<[^>]*>([^<]+)</i) ||
-                          html.match(/Safety Rating[:\s]*([A-Za-z\s]+)/i)
-        if (safetyMatch) {
-          const rating = safetyMatch[1].trim().toLowerCase()
+        const safetyRating = extractTableValue('Safety Rating')
+        if (safetyRating) {
+          const rating = cleanText(safetyRating)?.toLowerCase()
           if (rating && !rating.includes('does not necessarily') && rating.length < 20) {
             data.safetyRating = rating
           }
         }
 
         // Extract operating authority status (this is the key field we were missing)
-        const authorityStatusMatch = html.match(/Operating Authority Status[:\s]*<[^>]*>([^<]+)</i) ||
-                                   html.match(/Operating Authority Status[:\s]*([A-Za-z\s]+)/i) ||
-                                   html.match(/<TD[^>]*class="queryfield"[^>]*>([^<]+)<br>/i)
-        if (authorityStatusMatch) {
-          const status = authorityStatusMatch[1].trim()
+        const authorityStatus = extractTableValue('Operating Authority Status') || extractTableValue('Operating Status')
+        if (authorityStatus) {
+          const status = cleanText(authorityStatus)
           if (status && status !== ':' && status.length < 50 && !status.includes('For Licensing')) {
             data.operatingStatus = status
             // Map operating authority status to our insurance/authority status
@@ -271,13 +295,11 @@ export class FMCSAService {
         }
 
         // Extract MC/MX/FF Number(s) for MC number
-        const mcNumbersMatch = html.match(/MC\/MX\/FF Number\(s\)[:\s]*<[^>]*>([^<]+)</i) ||
-                              html.match(/MC\/MX\/FF Number\(s\)[:\s]*([^<\n\r]+)/i) ||
-                              html.match(/<A[^>]*> MC-(\d+)<\/A>/i)
-        if (mcNumbersMatch) {
-          const mcText = mcNumbersMatch[1].trim()
+        const mcNumbers = extractTableValue('MC/MX/FF Number(s)')
+        if (mcNumbers) {
+          const mcText = cleanText(mcNumbers)
           // Look for MC- pattern in the text
-          const mcMatch = mcText.match(/MC-(\d+)/)
+          const mcMatch = mcText?.match(/MC-(\d+)/)
           if (mcMatch) {
             data.mcsNumber = `MC-${mcMatch[1]}`
           } else {
@@ -285,35 +307,22 @@ export class FMCSAService {
           }
         }
 
-        // Extract operating status (fallback if authority status not found)
-        const statusMatch = html.match(/Operating Status[:\s]*<[^>]*>([^<]+)</i) ||
-                          html.match(/Operating Status[:\s]*([A-Za-z\s]+)/i)
-        if (statusMatch && !data.authorityStatus) {
-          const status = statusMatch[1].trim()
-          if (status && status !== ':' && status.length < 20) {
-            data.operatingStatus = status
-            // Map operating status to our insurance/authority status
-            const statusLower = status.toLowerCase()
-            if (statusLower.includes('active') || statusLower.includes('authorized')) {
-              data.insuranceStatus = 'Active'
-              data.authorityStatus = 'Active'
-            } else if (statusLower.includes('out') || statusLower.includes('inactive')) {
-              data.insuranceStatus = 'Inactive'
-              data.authorityStatus = 'Inactive'
-            }
+        // Extract power units (vehicles)
+        const powerUnits = extractTableValue('Power Units')
+        if (powerUnits) {
+          const units = parseInt(cleanText(powerUnits)?.replace(/,/g, '') || '0')
+          if (!isNaN(units) && units > 0) {
+            data.powerUnits = units
           }
         }
 
-        // Extract power units (vehicles)
-        const powerUnitsMatch = html.match(/Power Units[:\s]*(\d+)/i)
-        if (powerUnitsMatch) {
-          data.powerUnits = parseInt(powerUnitsMatch[1])
-        }
-
         // Extract drivers
-        const driversMatch = html.match(/Drivers[:\s]*(\d+)/i)
-        if (driversMatch) {
-          data.drivers = parseInt(driversMatch[1])
+        const drivers = extractTableValue('Drivers')
+        if (drivers) {
+          const driverCount = parseInt(cleanText(drivers)?.replace(/,/g, '') || '0')
+          if (!isNaN(driverCount) && driverCount > 0) {
+            data.drivers = driverCount
+          }
         }
       }
 

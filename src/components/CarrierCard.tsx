@@ -124,6 +124,23 @@ export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton 
                 </span>
               )}
               
+              {/* Entity Type Badge */}
+              {carrier.entity_type && (
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  carrier.entity_type.toLowerCase().includes('carrier')
+                    ? 'bg-blue-100 text-blue-800'
+                    : carrier.entity_type.toLowerCase().includes('broker')
+                    ? 'bg-purple-100 text-purple-800'
+                    : carrier.entity_type.toLowerCase().includes('forwarder')
+                    ? 'bg-orange-100 text-orange-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {carrier.entity_type.toLowerCase().includes('carrier') ? '🚛' : 
+                   carrier.entity_type.toLowerCase().includes('broker') ? '📋' :
+                   carrier.entity_type.toLowerCase().includes('forwarder') ? '📦' : '🏢'} {carrier.entity_type}
+                </span>
+              )}
+              
               {/* Verification Badge */}
               {carrier.verified !== undefined && (
                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${

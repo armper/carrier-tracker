@@ -6,12 +6,14 @@ interface SearchFiltersProps {
     safetyRating: string
     insuranceStatus: string
     sortBy: string
+    carriersOnly: boolean
   }
   onFilterChange: (filters: {
     state: string
     safetyRating: string
     insuranceStatus: string
     sortBy: string
+    carriersOnly: boolean
   }) => void
   onClearFilters: () => void
 }
@@ -35,14 +37,16 @@ const SORT_OPTIONS = [
 ]
 
 export default function SearchFilters({ filters, onFilterChange, onClearFilters }: SearchFiltersProps) {
-  const updateFilter = (key: string, value: string) => {
+  const updateFilter = (key: string, value: string | boolean) => {
     onFilterChange({
       ...filters,
       [key]: value
     })
   }
 
-  const hasActiveFilters = Object.values(filters).some(value => value !== '')
+  const hasActiveFilters = Object.entries(filters).some(([key, value]) => 
+    key === 'carriersOnly' ? !value : value !== ''
+  )
 
   return (
     <div>
@@ -57,6 +61,34 @@ export default function SearchFilters({ filters, onFilterChange, onClearFilters 
             Clear All Filters
           </button>
         )}
+      </div>
+
+      {/* Carriers Only Toggle */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              Entity Type Filter
+            </label>
+            <p className="text-xs text-gray-500 mt-1">
+              {filters.carriersOnly 
+                ? 'Showing motor carriers only (recommended for freight brokers)' 
+                : 'Showing all entities (carriers, brokers, forwarders, etc.)'}
+            </p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filters.carriersOnly}
+              onChange={(e) => updateFilter('carriersOnly', e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            <span className="ml-3 text-sm font-medium text-gray-700">
+              Carriers Only
+            </span>
+          </label>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

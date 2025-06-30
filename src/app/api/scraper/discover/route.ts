@@ -178,19 +178,23 @@ export async function POST(request: NextRequest) {
 }
 
 async function getNextSequentialDot(supabase: any): Promise<number> {
-  // Get the highest existing DOT number and start from there + 1000
+  // Get the highest existing DOT number, excluding test carriers (> 9000000)
   const { data } = await supabase
     .from('carriers')
     .select('dot_number')
+    .lt('dot_number', '9000000') // Exclude test carriers
     .order('dot_number', { ascending: false })
     .limit(1)
 
   if (data && data[0]) {
     const highestDot = parseInt(data[0].dot_number)
-    return isNaN(highestDot) ? 3000000 : highestDot + 1000
+    if (!isNaN(highestDot) && highestDot > 0) {
+      // Start from realistic next number (add small increment)
+      return highestDot + 100 // Smaller increment for more realistic search
+    }
   }
   
-  return 3000000 // Default starting point for new DOT numbers
+  return 4000000 // Start from a realistic current DOT number range
 }
 
 function generateRandomDotNumber(): string {

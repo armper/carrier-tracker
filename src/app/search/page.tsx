@@ -50,7 +50,8 @@ export default function SearchPage() {
     state: '',
     safetyRating: '',
     insuranceStatus: '',
-    sortBy: ''
+    sortBy: '',
+    carriersOnly: true // Default to carriers only
   })
 
   const supabase = createClient()
@@ -131,8 +132,10 @@ export default function SearchPage() {
         queryBuilder = queryBuilder.or(`dot_number.ilike.%${query}%,legal_name.ilike.%${query}%,dba_name.ilike.%${query}%`)
       }
 
-      // Filter out non-carrier entities using the shared utility
-      queryBuilder = getCarrierOnlyFilters(queryBuilder)
+      // Filter out non-carrier entities only if carriersOnly is enabled
+      if (filters.carriersOnly) {
+        queryBuilder = getCarrierOnlyFilters(queryBuilder)
+      }
 
       // Apply filters
       if (filters.state) {
@@ -258,7 +261,8 @@ export default function SearchPage() {
       state: '',
       safetyRating: '',
       insuranceStatus: '',
-      sortBy: ''
+      sortBy: '',
+      carriersOnly: true // Reset to default carriers only
     })
   }
 
@@ -276,7 +280,8 @@ export default function SearchPage() {
       state: '',
       safetyRating: '',
       insuranceStatus: '',
-      sortBy: ''
+      sortBy: '',
+      carriersOnly: true
     })
     // Trigger search automatically
     performSearch()

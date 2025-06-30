@@ -4,8 +4,9 @@
  * Respectful scraping with rate limiting and error handling
  */
 
-import { createClient } from './supabase-server'
+import { createClient } from '@/lib/supabase-server'
 import { isCarrierEntity } from './carrier-filter'
+import * as cheerio from 'cheerio'
 
 interface ScrapedCarrierData {
   dot_number: string
@@ -104,120 +105,105 @@ export class SAFERScraper {
    * Scrape a single carrier's data from SAFER
    */
   async scrapeCarrier(dotNumber: string): Promise<ScrapeResult> {
-    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
-      try {
-        console.log(`Scraping DOT ${dotNumber}, attempt ${attempt}/${this.maxRetries}`)
-        
-        // Step 1: Get the search page first to establish session
-        const searchPageResponse = await fetch(`${this.baseUrl}/`, {
-          headers: {
-            'User-Agent': this.userAgent,
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Connection': 'keep-alive'
-          }
-        })
+    console.log(`Scraping DOT ${dotNumber}, attempt 1/3`)
+    
+    try {
+      const url = `https://safer.fmcsa.dot.gov/query.asp`
+      const formData = new URLSearchParams({
+        searchtype: 'ANY',
+        query_type: 'queryCarrierSnapshot',
+        query_param: 'USDOT',
+        query_string: dotNumber
+      })
 
-        if (!searchPageResponse.ok) {
-          throw new Error(`Failed to load search page: ${searchPageResponse.status}`)
-        }
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        body: formData.toString()
+      })
 
-        // Extract cookies for session
-        const cookies = searchPageResponse.headers.get('set-cookie') || ''
-        
-        // Step 2: Perform the search using the proper search endpoint
-        const searchUrl = `${this.baseUrl}/query.asp`
-        const searchParams = new URLSearchParams({
-          searchtype: 'ANY',
-          query_type: 'queryCarrierSnapshot', 
-          query_param: 'USDOT',
-          query_string: dotNumber
-        })
-
-        const response = await fetch(`${searchUrl}?${searchParams}`, {
-          headers: {
-            'User-Agent': this.userAgent,
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Connection': 'keep-alive',
-            'Referer': `${this.baseUrl}/`,
-            'Cookie': cookies
-          }
-        })
-
-        if (response.status === 429) {
-          console.log(`Rate limited for DOT ${dotNumber}, waiting...`)
-          await this.sleep(this.requestDelay * 2) // Double delay on rate limit
-          continue
-        }
-
-        if (!response.ok) {
-          if (attempt < this.maxRetries) {
-            await this.sleep(this.requestDelay)
-            continue
-          }
-          return {
-            success: false,
-            error: `HTTP ${response.status}: ${response.statusText}`,
-            httpStatus: response.status
-          }
-        }
-
-        const html = await response.text()
-        
-        // Detect SAFER site-wide failure
-        if (html.includes('Request Failed') || html.includes('database error') || html.includes('Your request has failed')) {
-          return {
-            success: false,
-            error: 'SAFER site down or unavailable (database error)',
-            httpStatus: response.status
-          }
-        }
-
-        // Check if carrier was found
-        if (html.includes('No records found') || html.includes('not found')) {
-          return {
-            success: false,
-            error: 'Carrier not found in SAFER database'
-          }
-        }
-
-        // Parse the HTML response
-        const parsedData = this.parseCarrierHTML(html, dotNumber)
-        
-        if (!parsedData.legal_name) {
-          return {
-            success: false,
-            error: 'Could not parse carrier data from response'
-          }
-        }
-
-        // Add delay between requests to be respectful
-        await this.sleep(this.requestDelay)
-
-        return {
-          success: true,
-          data: parsedData
-        }
-
-      } catch (error) {
-        console.error(`Scraping error for DOT ${dotNumber}, attempt ${attempt}:`, error)
-        
-        if (attempt < this.maxRetries) {
-          await this.sleep(this.requestDelay * attempt) // Exponential backoff
-          continue
-        }
-
+      if (!response.ok) {
+        console.log(`HTTP ${response.status} for DOT ${dotNumber}`)
         return {
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown scraping error'
+          error: `HTTP ${response.status}`,
+          httpStatus: response.status
         }
       }
-    }
 
-    return {
-      success: false,
-      error: 'Max retries exceeded'
+      const html = await response.text()
+      
+      // Light debug logging for development
+      if (process.env.NODE_ENV === 'development') {
+        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
+        if (titleMatch) {
+          console.log(`DOT ${dotNumber} - ${titleMatch[1]}`)
+        }
+      }
+
+      // Check if this is actually a company snapshot page
+      if (!html.includes('Company Snapshot')) {
+        console.log(`DOT ${dotNumber} - Not a valid company snapshot page`)
+        return {
+          success: false,
+          error: 'Not a valid company snapshot page'
+        }
+      }
+
+      // Use regex to check for company data fields (case-insensitive, ignore whitespace)
+      const hasLegalName = /legal\s*name/i.test(html)
+      const hasDBAName = /dba\s*name/i.test(html)
+      const hasPhysicalAddress = /physical\s*address/i.test(html)
+      const hasEntityType = /entity\s*type/i.test(html)
+
+      if (!hasLegalName && !hasDBAName && !hasPhysicalAddress && !hasEntityType) {
+        // Check if this is an inactive record
+        if (html.includes('RECORD INACTIVE') || html.includes('RECORD NOT FOUND')) {
+          return {
+            success: false,
+            error: 'Carrier record inactive or not found'
+          }
+        }
+        
+        // Check if this is a search form page (no company data)
+        if (html.includes('Search Criteria') && html.includes('Users can search by DOT Number')) {
+          return {
+            success: false,
+            error: 'No company data found - DOT number may not exist'
+          }
+        }
+        
+        return {
+          success: false,
+          error: 'No company data fields found'
+        }
+      }
+
+      const data = this.parseCarrierHTML(html, dotNumber)
+      
+      if (!data.legal_name || data.legal_name.length > 200) {
+        console.log(`DOT ${dotNumber} - Invalid legal name extracted: ${data.legal_name}`)
+        return {
+          success: false,
+          error: 'Could not extract valid company name'
+        }
+      }
+
+      console.log(`Successfully parsed data for DOT ${dotNumber}: ${data.legal_name}`)
+      return {
+        success: true,
+        data
+      }
+
+    } catch (error) {
+      console.error(`Error scraping DOT ${dotNumber}:`, error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
     }
   }
 
@@ -230,23 +216,13 @@ export class SAFERScraper {
     }
 
     try {
-      // Helper function to extract text between patterns
-      const extractBetween = (start: string, end: string): string | null => {
-        const startIndex = html.indexOf(start)
-        if (startIndex === -1) return null
-        
-        const searchStart = startIndex + start.length
-        const endIndex = html.indexOf(end, searchStart)
-        if (endIndex === -1) return null
-        
-        return html.substring(searchStart, endIndex).trim()
-      }
+      // Load HTML into Cheerio for DOM parsing
+      const $ = cheerio.load(html)
 
-      // Helper function to clean HTML and extract text
+      // Helper function to clean text
       const cleanText = (text: string | null): string | undefined => {
         if (!text) return undefined
         return text
-          .replace(/<[^>]*>/g, '') // Remove HTML tags
           .replace(/&nbsp;/g, ' ')
           .replace(/&amp;/g, '&')
           .replace(/&lt;/g, '<')
@@ -254,56 +230,183 @@ export class SAFERScraper {
           .trim()
       }
 
-      // More precise extraction using table row patterns
+      // Helper function to extract table values using DOM selectors - enhanced for SAFER structure
       const extractTableValue = (label: string): string | null => {
-        // Look for patterns like: <td>Legal Name:</td><td>COMPANY NAME</td>
-        const patterns = [
-          new RegExp(`<td[^>]*>\\s*${label}\\s*:?\\s*</td>\\s*<td[^>]*>([^<]+)</td>`, 'i'),
-          new RegExp(`<td[^>]*>\\s*${label}\\s*</td>\\s*<td[^>]*>([^<]+)</td>`, 'i'),
-          new RegExp(`${label}\\s*:?\\s*</td>\\s*<td[^>]*>([^<]+)</td>`, 'i')
-        ]
+        // SAFER uses a specific structure: <TH>Label:</TH><TD>Value</TD>
         
-        for (const pattern of patterns) {
-          const match = html.match(pattern)
-          if (match && match[1]) {
-            return match[1].trim()
+        // Approach 1: Look for TH elements containing the label with colon
+        let labelCell = $(`th:contains("${label}:")`)
+        if (labelCell.length === 0) {
+          labelCell = $(`th:contains("${label}")`)
+        }
+        
+        if (labelCell.length > 0) {
+          // Get the next TD in the same row
+          const dataCell = labelCell.next('td')
+          if (dataCell.length > 0) {
+            let text = dataCell.text().trim()
+            
+            // Clean up common SAFER artifacts
+            text = text
+              .replace(/&nbsp;/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim()
+            
+            return text || null
           }
         }
+        
+        // Approach 2: Look for TD elements containing the label as a fallback
+        const row = $(`td:contains("${label}:")`)
+        if (row.length > 0) {
+          const dataCell = row.next('td')
+          if (dataCell.length > 0) {
+            let text = dataCell.text().trim()
+            text = text.replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
+            return text || null
+          }
+        }
+        
         return null
       }
 
-      // Extract Legal Name with precise patterns
+      // Specialized extraction for complex fields with checkboxes
+      const extractCheckboxField = (label: string): string[] => {
+        const labelElement = $(`th:contains("${label}"), td:contains("${label}")`).first()
+        if (labelElement.length === 0) return []
+        
+        const section = labelElement.closest('tr').nextAll('tr').filter(function() {
+          return $(this).find('td').length > 0 && $(this).find('td').first().text().trim() !== ''
+        }).first()
+        
+        if (section.length === 0) return []
+        
+        const checkedItems: string[] = []
+        section.find('td').each(function() {
+          const text = $(this).text().trim()
+          if (text === 'X') {
+            const nextCell = $(this).next('td')
+            if (nextCell.length > 0) {
+              const item = nextCell.text().trim()
+              if (item && item.length > 0) {
+                checkedItems.push(item)
+              }
+            }
+          }
+        })
+        
+        return checkedItems
+      }
+
+      // Extract Legal Name with better fallbacks
       let legalName = extractTableValue('Legal Name')
+      
+      // Minimal debug logging
+      
+      // Validate the extracted legal name
+      if (legalName && (legalName.length > 200 || 
+          legalName.includes('Query Result') || 
+          legalName.includes('SAFER Table Layout') ||
+          legalName.includes('Information') ||
+          legalName.includes('USDOT Number') ||
+          legalName.includes('MC/MX Number') ||
+          legalName.includes('Enter Value') ||
+          legalName.includes('Search Criteria'))) {
+        console.log(`DOT ${dotNumber} - Invalid legal name detected, clearing:`, legalName)
+        legalName = null
+      }
+      
       if (!legalName) {
-        // Fallback to title extraction
-        const titleMatch = html.match(/<TITLE>SAFER Web - Company Snapshot\s+([^<]+)<\/TITLE>/i)
+        // Fallback 1: Try title extraction
+        const title = $('title').text()
+        const titleMatch = title.match(/SAFER Web - Company Snapshot\s+(.+)/i)
         if (titleMatch) {
           legalName = titleMatch[1].trim()
         }
       }
-      data.legal_name = cleanText(legalName)
-
-      // Extract DBA Name
-      data.dba_name = cleanText(extractTableValue('DBA Name'))
-
-      // Extract Physical Address
-      const rawAddress = extractTableValue('Physical Address')
-      if (rawAddress) {
-        const cleanAddress = cleanText(rawAddress)
-        data.physical_address = cleanAddress
-
-        // Extract state and city from address
-        if (cleanAddress) {
-          const addressParts = cleanAddress.split(',').map(part => part.trim())
-          if (addressParts.length >= 2) {
-            const lastPart = addressParts[addressParts.length - 1]
-            const stateZipMatch = lastPart.match(/^([A-Z]{2})\s+(\d{5}(-\d{4})?)$/)
-            if (stateZipMatch) {
-              data.state = stateZipMatch[1]
-              data.city = addressParts[addressParts.length - 2]
-            }
+      
+      // Fallback 2: If still no name, try to find any company name pattern
+      if (!legalName || legalName.length > 200) {
+        // Look for any text that looks like a company name
+        const allText = $('body').text()
+        const companyNameMatch = allText.match(/([A-Z][A-Z\s&.,'-]{3,50})/g)
+        if (companyNameMatch) {
+          // Filter out common SAFER page text
+          const filteredNames = companyNameMatch.filter(name => 
+            name.length > 3 && 
+            name.length < 100 &&
+            !name.includes('SAFER') &&
+            !name.includes('USDOT') &&
+            !name.includes('MC/MX') &&
+            !name.includes('Query Result') &&
+            !name.includes('Information') &&
+            !name.includes('Table Layout') &&
+            !name.includes('Enter Value') &&
+            !name.includes('DOT Number') &&
+            !name.includes('Number') &&
+            !name.includes('Name') &&
+            !name.includes('Search Criteria') &&
+            !name.includes('Company Snapshot')
+          )
+          
+          if (filteredNames.length > 0) {
+            legalName = filteredNames[0].trim()
           }
         }
+      }
+      
+      // Final validation before using fallback
+      if (legalName && (legalName.length > 200 || 
+          legalName.includes('Query Result') || 
+          legalName.includes('SAFER Table Layout') ||
+          legalName.includes('Information') ||
+          legalName.includes('USDOT Number') ||
+          legalName.includes('MC/MX Number') ||
+          legalName.includes('Enter Value') ||
+          legalName.includes('Search Criteria'))) {
+        console.log(`DOT ${dotNumber} - Final validation failed, using fallback name`)
+        legalName = `Carrier ${dotNumber}`
+      }
+      
+      // Final fallback: Use DOT number if no name found
+      if (!legalName || legalName.length > 200) {
+        legalName = `Carrier ${dotNumber}`
+      }
+      
+      data.legal_name = cleanText(legalName)
+
+      // Extract other fields with correct SAFER labels
+      data.dba_name = cleanText(extractTableValue('DBA Name'))
+      data.physical_address = cleanText(extractTableValue('Physical Address'))
+      data.entity_type = cleanText(extractTableValue('Entity Type'))
+      data.operating_status = cleanText(extractTableValue('Operating Status'))
+      data.phone = cleanText(extractTableValue('Phone'))
+      
+      // Try alternative labels for Operating Status
+      if (!data.operating_status) {
+        data.operating_status = cleanText(extractTableValue('Authority Status'))
+      }
+      
+      // Use specialized extraction for complex checkbox fields
+      const carrierOperations = extractCheckboxField('Carrier Operation')
+      data.carrier_operation = carrierOperations.length > 0 ? carrierOperations : undefined
+      
+      const cargoTypes = extractCheckboxField('Cargo Carried')
+      data.equipment_types = cargoTypes.length > 0 ? cargoTypes : undefined
+
+      // Additional validation for complex fields
+      if (data.carrier_operation && Array.isArray(data.carrier_operation)) {
+        // Filter out any HTML artifacts
+        data.carrier_operation = data.carrier_operation.filter((op: string) => 
+          op && op.length < 50 && !op.includes('SAFER Layout') && !op.includes('Query Result')
+        )
+      }
+      
+      if (data.equipment_types && Array.isArray(data.equipment_types)) {
+        // Filter out any HTML artifacts
+        data.equipment_types = data.equipment_types.filter((cargo: string) => 
+          cargo && cargo.length < 50 && !cargo.includes('SAFER Layout') && !cargo.includes('Query Result')
+        )
       }
 
       // Extract Phone
@@ -319,7 +422,7 @@ export class SAFERScraper {
         else data.safety_rating = 'not-rated'
       }
 
-      // Extract Authority Status (Operating Authority Status)
+      // Extract Authority Status (Operating Authority Status) - improved parsing
       const rawAuthorityStatus = extractTableValue('Operating Authority Status') || extractTableValue('Operating Status') || extractTableValue('Authority Status')
       if (rawAuthorityStatus) {
         const status = cleanText(rawAuthorityStatus)?.toLowerCase()
@@ -374,24 +477,25 @@ export class SAFERScraper {
         }
       }
 
-      // MC Number (Motor Carrier Authority) - extract from MC/MX/FF Number(s)
-      const mcNumbers = extractTableValue('MC/MX/FF Number(s)') || extractTableValue('MC') || extractTableValue('MC Number')
+      // MC Number (Motor Carrier Authority) - try different SAFER labels
+      const mcNumbers = extractTableValue('MC/MX/FF Number(s)') || 
+                       extractTableValue('MC/MX Number(s)') ||
+                       extractTableValue('MC Number') ||
+                       extractTableValue('MC')
       if (mcNumbers) {
         const mcText = cleanText(mcNumbers)
-        // Look for MC- pattern in the text
-        const mcMatch = mcText?.match(/MC-(\d+)/)
-        if (mcMatch) {
-          data.mc_number = `MC-${mcMatch[1]}`
-        } else {
-          data.mc_number = mcText
+        // Only accept if it looks like an actual MC number (contains MC- or just numbers)
+        if (mcText && (mcText.includes('MC-') || /^\d+$/.test(mcText))) {
+          const mcMatch = mcText.match(/MC-(\d+)/)
+          if (mcMatch) {
+            data.mc_number = `MC-${mcMatch[1]}`
+          } else if (/^\d+$/.test(mcText)) {
+            data.mc_number = `MC-${mcText}`
+          } else {
+            data.mc_number = mcText
+          }
         }
       }
-
-      // Operating Status (more detailed than authority status)
-      data.operating_status = cleanText(extractTableValue('Operating Authority Status') || extractTableValue('Operating Status'))
-
-      // Entity Type (Corporation, LLC, etc.)
-      data.entity_type = cleanText(extractTableValue('Entity Type') || extractTableValue('Business Type'))
 
       // Safety Review/Rating dates
       data.safety_review_date = cleanText(extractTableValue('Safety Review Date'))
@@ -548,29 +652,12 @@ export class SAFERScraper {
         }
       }
 
-      // Additional Compliance Flags
-      data.hazmat_certification = data.hazmat_flag
-      data.passenger_certification = data.passenger_flag
-      
-      // Drug/Alcohol Testing (usually required for interstate carriers)
-      if (data.interstate_operation) {
-        data.drug_testing_program = true
-        data.alcohol_testing_program = true
-      }
+      return data
 
-      // Contact Information
-      data.email = cleanText(extractTableValue('Email') || extractTableValue('E-mail'))
-      data.website = cleanText(extractTableValue('Website') || extractTableValue('Web Site'))
-      data.emergency_contact = cleanText(extractTableValue('Emergency Contact'))
-      data.emergency_phone = cleanText(extractTableValue('Emergency Phone') || extractTableValue('Emergency Contact Phone'))
-
-      console.log(`Successfully parsed data for DOT ${dotNumber}: ${data.legal_name}`)
-      
     } catch (error) {
       console.error(`Error parsing HTML for DOT ${dotNumber}:`, error)
+      return data
     }
-
-    return data
   }
 
   /**
@@ -798,7 +885,6 @@ export class SAFERScraper {
     const supabase = await createClient()
     
     try {
-      // Just get any carriers for now since we don't have the sync columns yet
       const { data: carriers } = await supabase
         .from('carriers')
         .select('dot_number')

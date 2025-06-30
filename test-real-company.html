@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD><TITLE>SAFER Web - Company Snapshot</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<LINK href="safer.css" type=text/css rel=stylesheet>
+
+<BODY>
+
+
+
+<!-- Response.Write("header.inc role: " & Session("role") & "<BR>") -->
+<!-- Response.Write("path: " & Request.Cookies("COMPASS_PORTAL_PATH").value & "<BR>")-->
+<!-- Response.Write("path: " & Request.ServerVariables("ALL_HTTP") & "<BR>") -->
+
+<TABLE cellSpacing=0 cellPadding=1 width="100%" border=0 bordercolor=red summary="Table used for formatting purposes only">
+
+  <TR>
+    <TH SCOPE="ROW"><div class="hidden">SAFER Table Layout</div></TH>
+    <TD vAlign=centered ><IMG alt="FMCSA Logo" SRC="images/SAFER-System.GIF" width="100%" border=0>
+</TD>
+  </TR>
+
+  <TR>
+    <TH SCOPE="ROW"><div class="hidden">SAFER Table Layout</div></TH>
+    <TD COLSPAN=3><IMG alt="horizontal line" SRC="images/SAFER_hr_half.jpg" width="100%" height="2">
+    </TD>
+  </TR>
+
+        
+</TABLE>
+
+
+    <P align=center><FONT face=arial color=#2040a0 size=5><I><B>Company Snapshot</I></B><BR></FONT>
+	<P ALIGN="center">The <I>Company Snapshot</I> is a concise electronic record of a companyï¿½s 
+	identification, size, commodity information, and safety record, including the safety 
+	rating (if any), a roadside out-of-service inspection summary, and crash information. 
+	The Company Snapshot is available via an ad-hoc query (one carrier at a time) free of charge.
+      <P align="center">
+      <FONT face=arial color=#2040a0 size=3><H4 align="center">Search Criteria</H4></font><BR>
+	<P align="center">Users can search by DOT Number, MC/MX Number or Company Name.
+<FORM name="QueryBox" ACTION="query.asp" METHOD="Post">
+
+<!-- OnSubmit="format_input()" -->
+<INPUT type="hidden" name="searchtype" value="ANY">
+<INPUT type="hidden" name="query_type" value="queryCarrierSnapshot">
+<P ALIGN=CENTER>
+<TABLE cellSpacing=0 cellPadding=4 width=300 border=0 bgcolor=#c0e0ff summary="query result">
+  <TR><TH SCOPE="COL"><div class="hidden">Query Result</div></TH>
+  </TR>
+  <TR>
+    <!--following is for debugging code that keeps the user's last 
+        query parameter and string stored in the session so that 
+        from page to page the query form defaults to the user's
+        last query.-->
+    <!--td>LAST QUERY PARAM: </TD-->
+    <!--td>LAST QUERY STRING: </TD-->
+    <TH SCOPE="ROW"><div class="hidden">Information</div></TH>
+    <TD NOWRAP="nowrap"><input id="1" type="radio" name="query_param" value="USDOT"
+    checked>
+    <LABEL for="1">USDOT Number</LABEL></TD>
+    <TD NOWRAP="nowrap"><input id="2" type="radio" name="query_param" value="MC_MX"
+    >
+    <LABEL for="2">MC/MX Number</LABEL></TD>
+    <TD NOWRAP="nowrap"><input id="3" type="radio" name="query_param" value="NAME"
+    >
+    <LABEL for="3">Name</LABEL>
+    </TD>
+  </TR>
+  <TR>
+    <TH SCOPE="ROW"><div class="hidden">SAFER Table Layout</div></TH>
+    <TD COLSPAN="3" ALIGN="CENTER"><LABEL for="4">Enter Value:</LABEL>&nbsp;<input id="4"type=" text" name="query_string" value="">
+    </TD>
+  </TR>
+  <TR>
+    <TH SCOPE="ROW"><div class="hidden">SAFER Table Layout</div></TH>
+    <TD COLSPAN="3" ALIGN="CENTER"><INPUT TYPE=SUBMIT VALUE="Search">
+    </TD>
+  </TR>
+</TABLE>
+</P>
+</FORM>
+
+<p align=right>
+
+                 
+<table border="0" width="960" align="center" cellpadding="0" cellspacing="0" style="border: solid 0px #e8e8e8;">
+  <!-- footer-->
+<tr>
+    <td colspan="3">
+            &#160;
+     </td>
+</tr>
+<tr>
+     <td colspan="3" align="center">
+          <div id="footerbox">
+          <div id="nestedbox" style="background: url(images/logo_footer.gif) no-repeat scroll 20px 40% #FFFFFF;">
+         </div>
+	<p>
+   	<a href="" class="footer_link">SAFER Home</a> <span class="footer_white_text">|</span> 
+	
+   <a href="http://www.fmcsa.dot.gov/feedback.htm" class="footer_link">Feedback</a>
+   <span class="footer_white_text">|</span> 
+   <a href="http://www.fmcsa.dot.gov/Online-Privacy-Policy.aspx" class="footer_link">Privacy Policy</a> 
+   <span class="footer_white_text">|</span>
+   <a href="http://www.usa.gov/" class="footer_link">USA.gov</a> 
+   <span class="footer_white_text">|</span> 
+   <a href="http://www.fmcsa.dot.gov/foia/foia.htm" class="footer_link">Freedom of Information Act (FOIA)</a> 
+   <span class="footer_white_text">|</span> 
+   <a href="http://www.fmcsa.dot.gov/508disclaimer.htm" class="footer_link">Accessibility</a> 
+   <span class="footer_white_text">|</span>
+   <a href="http://www.oig.dot.gov/Hotline" class="footer_link">OIG Hotline</a> 
+   <span class="footer_white_text">|</span> 
+   <a href="http://www.fmcsa.dot.gov/about/WebPoliciesAndImportantLinks.htm" class="footer_link">Web Policies and Important Links</a> 
+   <span class="footer_white_text">|</span> 
+   <a href="http://www.fmcsa.dot.gov/plugins.htm" class="footer_link">Plug-ins </a>
+   <br />
+</p>
+<p>
+    <span class="footer_title_text">Federal Motor Carrier Safety Administration</span><br />
+    <span class="footer_white_text">1200 New Jersey Avenue SE, Washington, DC 20590 &#8226; 1-800-832-5660 &#8226; TTY: 1-800-877-8339 &#8226;</span>
+    <a href="http://www.fmcsa.dot.gov/about/contact/offices/displayfieldroster.asp" class="footer_link">Field Office Contacts</a>
+</p>
+	<p style="margin-bottom: 0em;">&#160;</p>
+	</div>
+     </td>
+</tr>
+</table>
+
+
+
+</BODY>
+</HTML>
