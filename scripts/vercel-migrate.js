@@ -5,6 +5,8 @@
  * Runs database migrations during Vercel build process
  */
 
+require('dotenv').config({ path: '.env.local' });
+
 const { execSync } = require('child_process')
 const fs = require('fs')
 

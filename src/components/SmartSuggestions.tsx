@@ -56,6 +56,12 @@ export default function SmartSuggestions({ userId, onCarrierSaved }: Props) {
       const response = await fetch(`/api/suggestions/${userId}`)
       
       if (!response.ok) {
+        if (response.status === 500) {
+          // Database tables might not exist yet
+          console.warn('Smart suggestions tables not found. This feature requires database migration.')
+          setSuggestions([])
+          return
+        }
         throw new Error('Failed to fetch suggestions')
       }
 
@@ -63,11 +69,17 @@ export default function SmartSuggestions({ userId, onCarrierSaved }: Props) {
       setSuggestions(data.suggestions || [])
     } catch (error) {
       console.error('Error fetching suggestions:', error)
-      addNotification({
-        type: 'error',
-        title: 'Error',
-        message: 'Failed to load suggestions'
-      })
+      // Don't show error notification for missing tables - just log it
+      if (error instanceof Error && error.message.includes('Failed to fetch suggestions')) {
+        console.warn('Smart suggestions feature not available. Database migration required.')
+      } else {
+        addNotification({
+          type: 'error',
+          title: 'Error',
+          message: 'Failed to load suggestions'
+        })
+      }
+      setSuggestions([])
     } finally {
       setLoading(false)
     }
