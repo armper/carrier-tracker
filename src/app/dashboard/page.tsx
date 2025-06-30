@@ -13,7 +13,7 @@ export default async function DashboardPage() {
     redirect('/auth/login')
   }
 
-  // Fetch user's saved carriers (only actual carriers, excluding brokers and other entities)
+  // Fetch user's saved carriers (all entities - filtering will be handled client-side)
   const { data: savedCarriers, error: savedCarriersError } = await supabase
     .from('saved_carriers')
     .select(`
@@ -44,10 +44,6 @@ export default async function DashboardPage() {
       )
     `)
     .eq('user_id', user.id)
-    .not('carriers.entity_type', 'ilike', '%broker%')
-    .not('carriers.entity_type', 'ilike', '%freight forwarder%')
-    .not('carriers.entity_type', 'ilike', '%property broker%')
-    .not('carriers.entity_type', 'ilike', '%passenger broker%')
     .order('priority', { ascending: false })
     .order('updated_at', { ascending: false })
 
@@ -81,10 +77,6 @@ export default async function DashboardPage() {
         )
       `)
       .eq('user_id', user.id)
-      .not('carriers.entity_type', 'ilike', '%broker%')
-      .not('carriers.entity_type', 'ilike', '%freight forwarder%')
-      .not('carriers.entity_type', 'ilike', '%property broker%')
-      .not('carriers.entity_type', 'ilike', '%passenger broker%')
       .order('created_at', { ascending: false })
     
     fallbackCarriers = basicCarriers
