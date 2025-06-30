@@ -63,7 +63,9 @@ interface Props {
 export default function UserMonitoringDashboard({ savedCarriers, recentSafetyChanges, activeAlerts, stats }: Props) {
   const [selectedTab, setSelectedTab] = useState<'insurance' | 'safety' | 'alerts'>('insurance')
 
-  const getSafetyRatingColor = (rating: string) => {
+  const getSafetyRatingColor = (rating: string | null) => {
+    if (!rating) return 'bg-gray-100 text-gray-800 border-gray-200'
+    
     switch (rating.toLowerCase()) {
       case 'satisfactory':
         return 'bg-green-100 text-green-800 border-green-200'

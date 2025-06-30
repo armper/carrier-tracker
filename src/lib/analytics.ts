@@ -140,7 +140,9 @@ export function processAnalyticsData(savedCarriers: SavedCarrier[]): AnalyticsDa
   }
 }
 
-function getSafetyRatingColor(rating: string): string {
+function getSafetyRatingColor(rating: string | null): string {
+  if (!rating) return '#6b7280' // gray
+  
   switch (rating.toLowerCase()) {
     case 'satisfactory':
       return '#10b981' // green
