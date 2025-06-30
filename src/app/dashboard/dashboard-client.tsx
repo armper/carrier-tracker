@@ -12,6 +12,7 @@ import SafetyRatingChart from '@/components/analytics/SafetyRatingChart'
 import ComplianceChart from '@/components/analytics/ComplianceChart'
 import EnhancedCarrierCard from '@/components/dashboard/EnhancedCarrierCard'
 import SmartDashboardLayout from '@/components/dashboard/SmartDashboardLayout'
+import SmartSuggestions from '@/components/SmartSuggestions'
 
 interface Carrier {
   id: string
@@ -984,6 +985,17 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
               </>
             )}
           </SmartDashboardLayout>
+
+          {/* Smart Suggestions */}
+          <div className="mt-8">
+            <SmartSuggestions 
+              userId={user.id} 
+              onCarrierSaved={() => {
+                // Refresh the page or update carriers list
+                window.location.reload()
+              }} 
+            />
+          </div>
           </div>
         )}
 

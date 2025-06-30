@@ -10,7 +10,7 @@ interface Carrier {
   dba_name: string | null
   physical_address: string | null
   phone: string | null
-  safety_rating: string
+  safety_rating: string | null
   insurance_status: string
   authority_status: string
   carb_compliance: boolean
@@ -108,7 +108,11 @@ export default function EnhancedCarrierCard({
     }
   }
 
-  const getSafetyRatingConfig = (rating: string) => {
+  const getSafetyRatingConfig = (rating: string | null) => {
+    if (!rating) {
+      return { bg: 'bg-gray-500', text: 'text-white', label: 'NOT RATED' }
+    }
+    
     switch (rating.toLowerCase()) {
       case 'satisfactory':
         return { bg: 'bg-green-500', text: 'text-white', label: 'SATISFACTORY' }

@@ -9,7 +9,7 @@ interface Carrier {
   dba_name: string | null
   physical_address: string | null
   phone: string | null
-  safety_rating: string
+  safety_rating: string | null
   insurance_status: string
   authority_status: string
   carb_compliance: boolean
@@ -37,7 +37,9 @@ interface CarrierCardProps {
 }
 
 export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton = true, isSaved = false }: CarrierCardProps) {
-  const getSafetyRatingColor = (rating: string) => {
+  const getSafetyRatingColor = (rating: string | null) => {
+    if (!rating) return 'bg-gray-100 text-gray-800'
+    
     switch (rating.toLowerCase()) {
       case 'satisfactory':
         return 'bg-green-100 text-green-800'
@@ -161,7 +163,7 @@ export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton 
           <div>
             <span className="text-sm text-gray-600 block mb-1">Safety Rating</span>
             <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getSafetyRatingColor(carrier.safety_rating)}`}>
-              {carrier.safety_rating}
+              {carrier.safety_rating || 'Not Rated'}
             </div>
           </div>
           

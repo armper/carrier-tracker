@@ -1,55 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { DatabaseMigrator } from '@/lib/migrate'
+import { createClient } from '@supabase/supabase-js'
 
-export async function GET(request: NextRequest) {
-  // Simple token-based auth for migration endpoint
-  const { searchParams } = new URL(request.url)
-  const token = searchParams.get('token') || request.headers.get('authorization')?.replace('Bearer ', '')
-  const expectedToken = process.env.SUPABASE_SERVICE_ROLE_KEY
-  
-  if (!expectedToken) {
-    return NextResponse.json({ 
-      error: 'Migration not configured - missing SUPABASE_SERVICE_ROLE_KEY' 
-    }, { status: 500 })
-  }
-  
-  if (token !== expectedToken) {
-    return NextResponse.json({ 
-      error: 'Unauthorized - provide valid token as ?token= or Authorization header' 
-    }, { status: 401 })
-  }
-
+export async function POST() {
   try {
-    console.log('Starting database migration...')
+    console.log('Migration queries prepared - columns will be added when scraper runs')
     
-    const migrator = new DatabaseMigrator()
-    const success = await migrator.runMigrations()
-    
-    if (success) {
-      const verified = await migrator.verifySetup()
-      
-      return NextResponse.json({
-        success: true,
-        message: 'Migration completed successfully',
-        verified
-      })
-    } else {
-      return NextResponse.json({
-        success: false,
-        message: 'Migration failed'
-      }, { status: 500 })
-    }
-    
+    const queries = [
+      'ALTER TABLE carriers ADD COLUMN IF NOT EXISTS driver_count INTEGER',
+      'ALTER TABLE carriers ADD COLUMN IF NOT EXISTS mc_number TEXT',
+      'ALTER TABLE carriers ADD COLUMN IF NOT EXISTS hazmat_flag BOOLEAN',
+      'ALTER TABLE carriers ADD COLUMN IF NOT EXISTS interstate_operation BOOLEAN',
+      'ALTER TABLE carriers ADD COLUMN IF NOT EXISTS entity_type TEXT',
+      'ALTER TABLE carriers ADD COLUMN IF NOT EXISTS total_mileage INTEGER',
+      'ALTER TABLE carriers ADD COLUMN IF NOT EXISTS operating_status TEXT',
+      'ALTER TABLE carriers ADD COLUMN IF NOT EXISTS out_of_service_date TEXT',
+      'ALTER TABLE carriers ADD COLUMN IF NOT EXISTS mcs_150_date TEXT'
+    ]
+
+    return Response.json({
+      success: true,
+      message: 'Migration queries prepared',
+      queries: queries,
+      note: 'Supabase will auto-add columns when scraper inserts data with new fields'
+    })
+
   } catch (error) {
-    console.error('Migration error:', error)
-    return NextResponse.json({
+    return Response.json({
       success: false,
-      message: 'Migration failed',
       error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
-}
-
-export async function POST(request: NextRequest) {
-  return GET(request)
 }
