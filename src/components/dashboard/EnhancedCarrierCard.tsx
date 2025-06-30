@@ -11,12 +11,15 @@ interface Carrier {
   physical_address: string | null
   phone: string | null
   safety_rating: string | null
-  insurance_status: string
-  authority_status: string
-  carb_compliance: boolean
+  insurance_status: string | null
+  authority_status: string | null
   state: string | null
   city: string | null
   vehicle_count: number | null
+  driver_count: number | null
+  entity_type: string | null
+  created_at: string
+  updated_at: string
   // Insurance tracking fields
   insurance_expiry_date?: string | null
   insurance_carrier?: string | null

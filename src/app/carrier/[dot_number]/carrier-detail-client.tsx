@@ -11,13 +11,16 @@ interface Carrier {
   dba_name: string | null
   physical_address: string | null
   phone: string | null
-  safety_rating: string
-  insurance_status: string
-  authority_status: string
-  carb_compliance: boolean
+  safety_rating: string | null
+  insurance_status: string | null
+  authority_status: string | null
   state: string | null
   city: string | null
   vehicle_count: number | null
+  driver_count: number | null
+  entity_type: string | null
+  created_at: string
+  updated_at: string
   // Insurance tracking fields
   insurance_expiry_date: string | null
   insurance_carrier: string | null
@@ -293,24 +296,15 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Insurance Status</label>
-              <div className={`inline-block px-4 py-2 rounded-lg border text-sm font-medium ${getStatusColor(carrier.insurance_status)}`}>
-                {carrier.insurance_status}
+              <div className={`inline-block px-4 py-2 rounded-lg border text-sm font-medium ${getStatusColor(carrier.insurance_status || 'Unknown')}`}>
+                {carrier.insurance_status || 'Unknown'}
               </div>
             </div>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Authority Status</label>
-              <div className={`inline-block px-4 py-2 rounded-lg border text-sm font-medium ${getStatusColor(carrier.authority_status)}`}>
-                {carrier.authority_status}
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">CARB Compliance</label>
-              <div className={`inline-block px-4 py-2 rounded-lg border text-sm font-medium ${
-                carrier.carb_compliance ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'
-              }`}>
-                {carrier.carb_compliance ? 'Compliant' : 'Non-Compliant'}
+              <div className={`inline-block px-4 py-2 rounded-lg border text-sm font-medium ${getStatusColor(carrier.authority_status || 'Unknown')}`}>
+                {carrier.authority_status || 'Unknown'}
               </div>
             </div>
           </div>
@@ -454,8 +448,8 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Insurance</span>
-              <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(carrier.insurance_status)}`}>
-                {carrier.insurance_status}
+              <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(carrier.insurance_status || 'Unknown')}`}>
+                {carrier.insurance_status || 'Unknown'}
               </span>
             </div>
           </div>

@@ -25,7 +25,6 @@ interface CarrierFormData {
   safety_rating: string
   insurance_status: string
   authority_status: string
-  carb_compliance: boolean
   state: string
   city: string
   vehicle_count: string
@@ -50,7 +49,6 @@ export default function AddCarrierForm({ user }: Props) {
     safety_rating: 'satisfactory',
     insurance_status: 'Active',
     authority_status: 'Active',
-    carb_compliance: true,
     state: '',
     city: '',
     vehicle_count: '',
@@ -171,7 +169,6 @@ export default function AddCarrierForm({ user }: Props) {
         safety_rating: formData.safety_rating,
         insurance_status: formData.insurance_status,
         authority_status: formData.authority_status,
-        carb_compliance: formData.carb_compliance,
         state: formData.state.trim() || null,
         city: formData.city.trim() || null,
         vehicle_count: formData.vehicle_count ? parseInt(formData.vehicle_count) : null,
@@ -514,19 +511,6 @@ export default function AddCarrierForm({ user }: Props) {
                   <option value="Revoked">Revoked</option>
                 </select>
               </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  name="carb_compliance"
-                  checked={formData.carb_compliance}
-                  onChange={handleInputChange}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">CARB Compliant</span>
-              </label>
             </div>
           </div>
 

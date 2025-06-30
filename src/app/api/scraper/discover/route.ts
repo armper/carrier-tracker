@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { SAFERScraper } from '@/lib/safer-scraper'
 import { NextRequest } from 'next/server'
+import { isCarrierEntity as checkIsCarrierEntity } from '@/lib/carrier-filter'
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,6 +74,15 @@ export async function POST(request: NextRequest) {
               discovered++
               console.log(`✅ Discovered new carrier: ${result.data.legal_name} (DOT ${dotNumber})`)
             }
+          } else if (result.error && result.error.includes('SAFER site down')) {
+            // Surface site down error and abort
+            return Response.json({
+              success: false,
+              siteDown: true,
+              siteDownError: result.error,
+              dotNumber,
+              summary: 'SAFER website is currently unavailable. Please try again later.'
+            }, { status: 503 })
           } else {
             // DOT number doesn't exist or failed to scrape
             newCarriers.push({
@@ -118,6 +128,15 @@ export async function POST(request: NextRequest) {
               discovered++
               console.log(`✅ Discovered new carrier: ${result.data.legal_name} (DOT ${dotNumber})`)
             }
+          } else if (result.error && result.error.includes('SAFER site down')) {
+            // Surface site down error and abort
+            return Response.json({
+              success: false,
+              siteDown: true,
+              siteDownError: result.error,
+              dotNumber,
+              summary: 'SAFER website is currently unavailable. Please try again later.'
+            }, { status: 503 })
           } else {
             newCarriers.push({
               dotNumber,
@@ -188,6 +207,12 @@ function generateRandomDotNumber(): string {
 
 async function addNewCarrier(supabase: any, carrierData: any): Promise<{success: boolean, error?: string}> {
   try {
+    // Check if this entity is actually a carrier
+    if (!checkIsCarrierEntity(carrierData)) {
+      console.log(`Skipping non-carrier entity ${carrierData.dot_number} (${carrierData.entity_type}): ${carrierData.legal_name}`)
+      return { success: false, error: 'Non-carrier entity' }
+    }
+
     // Use createClient to get service role access for inserting carriers
     const { createClient: createServiceClient } = await import('@supabase/supabase-js')
     const serviceSupabase = createServiceClient(
@@ -266,4 +291,11 @@ async function addNewCarrier(supabase: any, carrierData: any): Promise<{success:
       error: error instanceof Error ? error.message : 'Database insert failed' 
     }
   }
+}
+
+/**
+ * Check if an entity is a carrier based on entity type and other indicators
+ */
+function isCarrierEntity(carrierData: any): boolean {
+  return checkIsCarrierEntity(carrierData)
 }

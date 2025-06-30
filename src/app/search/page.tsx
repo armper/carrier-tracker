@@ -6,6 +6,7 @@ import Link from 'next/link'
 import SearchFilters from '@/components/SearchFilters'
 import CarrierCard from '@/components/CarrierCard'
 import { useNotifications } from '@/components/ui/notification'
+import { isCarrierEntity, getCarrierOnlyFilters } from '@/lib/carrier-filter'
 
 interface Carrier {
   id: string
@@ -14,13 +15,14 @@ interface Carrier {
   dba_name: string | null
   physical_address: string | null
   phone: string | null
-  safety_rating: string
-  insurance_status: string
-  authority_status: string
-  carb_compliance: boolean
+  safety_rating: string | null
+  insurance_status: string | null
+  authority_status: string | null
   state: string | null
   city: string | null
   vehicle_count: number | null
+  driver_count: number | null
+  entity_type: string | null
   data_source?: string
   verified?: boolean
   trust_score?: number
@@ -129,6 +131,9 @@ export default function SearchPage() {
         queryBuilder = queryBuilder.or(`dot_number.ilike.%${query}%,legal_name.ilike.%${query}%,dba_name.ilike.%${query}%`)
       }
 
+      // Filter out non-carrier entities using the shared utility
+      queryBuilder = getCarrierOnlyFilters(queryBuilder)
+
       // Apply filters
       if (filters.state) {
         queryBuilder = queryBuilder.eq('state', filters.state)
@@ -162,14 +167,24 @@ export default function SearchPage() {
           const fmcsaData = await fmcsaResponse.json()
           
           if (fmcsaData.success && fmcsaData.data) {
-            finalResults = [fmcsaData.data]
-            
-            // Show notification about FMCSA fetch
-            addNotification({
-              type: 'success',
-              title: 'Carrier Found!',
-              message: `Retrieved fresh data from FMCSA for DOT ${cleanQuery}`
-            })
+            // Check if the FMCSA result is a carrier entity
+            const isCarrier = isCarrierEntity(fmcsaData.data)
+            if (isCarrier) {
+              finalResults = [fmcsaData.data]
+              
+              // Show notification about FMCSA fetch
+              addNotification({
+                type: 'success',
+                title: 'Carrier Found!',
+                message: `Retrieved fresh data from FMCSA for DOT ${cleanQuery}`
+              })
+            } else {
+              addNotification({
+                type: 'info',
+                title: 'Non-Carrier Entity',
+                message: `DOT ${cleanQuery} is a ${fmcsaData.data.entity_type || 'non-carrier entity'}, not a motor carrier`
+              })
+            }
           }
         } catch (fmcsaError) {
           console.error('FMCSA lookup failed:', fmcsaError)

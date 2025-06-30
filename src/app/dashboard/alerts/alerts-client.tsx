@@ -39,7 +39,6 @@ const ALERT_TYPES = [
   { value: 'insurance_status_change', label: 'Insurance Status Changes' },
   { value: 'insurance_expiration', label: 'Insurance Expiration Warnings' },
   { value: 'authority_status_change', label: 'Authority Status Changes' },
-  { value: 'carb_compliance_change', label: 'CARB Compliance Changes' },
   { value: 'all_changes', label: 'Any Status Changes' },
 ]
 

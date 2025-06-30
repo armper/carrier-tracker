@@ -5,16 +5,16 @@ interface Carrier {
   id: string
   dot_number: string
   legal_name: string
-  dba_name: string | null
-  physical_address: string | null
-  phone: string | null
-  safety_rating: string
-  insurance_status: string
-  authority_status: string
-  carb_compliance: boolean
+  safety_rating: string | null
+  insurance_status: string | null
+  authority_status: string | null
   state: string | null
   city: string | null
   vehicle_count: number | null
+  driver_count: number | null
+  entity_type: string | null
+  created_at: string
+  updated_at: string
 }
 
 interface SavedCarrier {
@@ -45,11 +45,13 @@ export interface AnalyticsData {
 }
 
 export function processAnalyticsData(savedCarriers: SavedCarrier[]): AnalyticsData {
-  const totalCarriers = savedCarriers.length
+  // Filter out saved carriers with null or missing carrier data
+  const validSavedCarriers = savedCarriers.filter(sc => sc.carriers != null)
+  const totalCarriers = validSavedCarriers.length
 
   // Safety Rating Distribution
-  const safetyRatings = savedCarriers.reduce((acc, sc) => {
-    const rating = sc.carriers.safety_rating || 'Unknown'
+  const safetyRatings = validSavedCarriers.reduce((acc, sc) => {
+    const rating = sc.carriers?.safety_rating || 'Unknown'
     acc[rating] = (acc[rating] || 0) + 1
     return acc
   }, {} as Record<string, number>)
@@ -61,9 +63,9 @@ export function processAnalyticsData(savedCarriers: SavedCarrier[]): AnalyticsDa
   }))
 
   // Compliance Breakdown (Insurance + Authority)
-  const complianceData = savedCarriers.reduce((acc, sc) => {
-    const insurance = sc.carriers.insurance_status === 'Active'
-    const authority = sc.carriers.authority_status === 'Active'
+  const complianceData = validSavedCarriers.reduce((acc, sc) => {
+    const insurance = sc.carriers?.insurance_status === 'Active'
+    const authority = sc.carriers?.authority_status === 'Active'
     
     if (insurance && authority) {
       acc.fullCompliance = (acc.fullCompliance || 0) + 1
@@ -82,7 +84,7 @@ export function processAnalyticsData(savedCarriers: SavedCarrier[]): AnalyticsDa
   ].filter(item => item.value > 0)
 
   // Priority Distribution
-  const priorities = savedCarriers.reduce((acc, sc) => {
+  const priorities = validSavedCarriers.reduce((acc, sc) => {
     const priority = sc.priority || 'medium'
     acc[priority] = (acc[priority] || 0) + 1
     return acc
@@ -95,10 +97,10 @@ export function processAnalyticsData(savedCarriers: SavedCarrier[]): AnalyticsDa
   }))
 
   // Risk Assessment
-  const riskAssessment = savedCarriers.reduce((acc, sc) => {
-    const rating = sc.carriers.safety_rating?.toLowerCase()
-    const insurance = sc.carriers.insurance_status === 'Active'
-    const authority = sc.carriers.authority_status === 'Active'
+  const riskAssessment = validSavedCarriers.reduce((acc, sc) => {
+    const rating = sc.carriers?.safety_rating?.toLowerCase()
+    const insurance = sc.carriers?.insurance_status === 'Active'
+    const authority = sc.carriers?.authority_status === 'Active'
     const priority = sc.priority || 'medium'
 
     // Calculate risk based on multiple factors
@@ -119,7 +121,7 @@ export function processAnalyticsData(savedCarriers: SavedCarrier[]): AnalyticsDa
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
-  const recentActivity = savedCarriers.reduce((acc, sc) => {
+  const recentActivity = validSavedCarriers.reduce((acc, sc) => {
     const createdAt = new Date(sc.created_at)
     if (createdAt >= oneWeekAgo) {
       acc.addedThisWeek++

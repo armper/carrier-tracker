@@ -115,8 +115,7 @@ export class FMCSAService {
           'Accept-Encoding': 'gzip, deflate',
           'Connection': 'keep-alive',
           'Upgrade-Insecure-Requests': '1',
-        },
-        timeout: 10000 // 10 second timeout
+        }
       })
 
       if (!response.ok) {
@@ -152,8 +151,7 @@ export class FMCSAService {
     const response = await fetch(snapshotUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      },
-      timeout: 10000
+      }
     })
 
     if (!response.ok) {
@@ -177,7 +175,8 @@ export class FMCSAService {
       }
 
       // Check if page requires JavaScript (common with FMCSA)
-      if (html.includes('This page requires scripting to be enabled') || html.includes('<noscript>')) {
+      if (html.includes('This page requires scripting to be enabled') && !html.includes('Legal Name')) {
+        // Only use JavaScript fallback if we can't find any data in the HTML
         // Try to extract from page title as fallback
         const titleMatch = html.match(/<TITLE>SAFER Web - Company Snapshot[^>]*?\s+([^<]+)<\/TITLE>/i)
         if (titleMatch) {
@@ -248,10 +247,48 @@ export class FMCSAService {
           }
         }
 
-        // Extract operating status  
+        // Extract operating authority status (this is the key field we were missing)
+        const authorityStatusMatch = html.match(/Operating Authority Status[:\s]*<[^>]*>([^<]+)</i) ||
+                                   html.match(/Operating Authority Status[:\s]*([A-Za-z\s]+)/i) ||
+                                   html.match(/<TD[^>]*class="queryfield"[^>]*>([^<]+)<br>/i)
+        if (authorityStatusMatch) {
+          const status = authorityStatusMatch[1].trim()
+          if (status && status !== ':' && status.length < 50 && !status.includes('For Licensing')) {
+            data.operatingStatus = status
+            // Map operating authority status to our insurance/authority status
+            const statusLower = status.toLowerCase()
+            if (statusLower.includes('authorized') || statusLower.includes('active')) {
+              data.insuranceStatus = 'Active'
+              data.authorityStatus = 'Active'
+            } else if (statusLower.includes('not authorized') || statusLower.includes('out') || statusLower.includes('inactive')) {
+              data.insuranceStatus = 'Inactive'
+              data.authorityStatus = 'Inactive'
+            } else {
+              data.insuranceStatus = 'Unknown'
+              data.authorityStatus = 'Unknown'
+            }
+          }
+        }
+
+        // Extract MC/MX/FF Number(s) for MC number
+        const mcNumbersMatch = html.match(/MC\/MX\/FF Number\(s\)[:\s]*<[^>]*>([^<]+)</i) ||
+                              html.match(/MC\/MX\/FF Number\(s\)[:\s]*([^<\n\r]+)/i) ||
+                              html.match(/<A[^>]*> MC-(\d+)<\/A>/i)
+        if (mcNumbersMatch) {
+          const mcText = mcNumbersMatch[1].trim()
+          // Look for MC- pattern in the text
+          const mcMatch = mcText.match(/MC-(\d+)/)
+          if (mcMatch) {
+            data.mcsNumber = `MC-${mcMatch[1]}`
+          } else {
+            data.mcsNumber = mcText
+          }
+        }
+
+        // Extract operating status (fallback if authority status not found)
         const statusMatch = html.match(/Operating Status[:\s]*<[^>]*>([^<]+)</i) ||
                           html.match(/Operating Status[:\s]*([A-Za-z\s]+)/i)
-        if (statusMatch) {
+        if (statusMatch && !data.authorityStatus) {
           const status = statusMatch[1].trim()
           if (status && status !== ':' && status.length < 20) {
             data.operatingStatus = status
@@ -373,10 +410,10 @@ export const fmcsaService = new FMCSAService()
 export function mapFMCSAToCarrierData(fmcsaData: FMCSACarrierData) {
   const baseData = {
     dot_number: fmcsaData.dotNumber,
-    legal_name: fmcsaData.legalName,
-    dba_name: fmcsaData.dbaName,
-    physical_address: fmcsaData.physicalAddress,
-    phone: fmcsaData.phone,
+    legal_name: fmcsaData.legalName || undefined,
+    dba_name: fmcsaData.dbaName || undefined,
+    physical_address: fmcsaData.physicalAddress || undefined,
+    phone: fmcsaData.phone || undefined,
     safety_rating: fmcsaData.safetyRating || 'not-rated',
     insurance_status: fmcsaData.insuranceStatus || 'Unknown',
     authority_status: fmcsaData.authorityStatus || 'Unknown',

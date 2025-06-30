@@ -10,13 +10,16 @@ interface Carrier {
   dba_name: string | null
   physical_address: string | null
   phone: string | null
-  safety_rating: string
-  insurance_status: string
-  authority_status: string
-  carb_compliance: boolean
+  safety_rating: string | null
+  insurance_status: string | null
+  authority_status: string | null
   state: string | null
   city: string | null
   vehicle_count: number | null
+  driver_count: number | null
+  entity_type: string | null
+  created_at: string
+  updated_at: string
 }
 
 interface SavedCarrier {

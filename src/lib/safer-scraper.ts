@@ -5,6 +5,7 @@
  */
 
 import { createClient } from './supabase-server'
+import { isCarrierEntity } from './carrier-filter'
 
 interface ScrapedCarrierData {
   dot_number: string
@@ -15,7 +16,6 @@ interface ScrapedCarrierData {
   safety_rating?: string
   insurance_status?: string
   authority_status?: string
-  carb_compliance?: boolean
   state?: string
   city?: string
   vehicle_count?: number
@@ -165,6 +165,15 @@ export class SAFERScraper {
 
         const html = await response.text()
         
+        // Detect SAFER site-wide failure
+        if (html.includes('Request Failed') || html.includes('database error') || html.includes('Your request has failed')) {
+          return {
+            success: false,
+            error: 'SAFER site down or unavailable (database error)',
+            httpStatus: response.status
+          }
+        }
+
         // Check if carrier was found
         if (html.includes('No records found') || html.includes('not found')) {
           return {
@@ -285,23 +294,20 @@ export class SAFERScraper {
 
         // Extract state and city from address
         if (cleanAddress) {
-          const addressParts = cleanAddress.split(',')
+          const addressParts = cleanAddress.split(',').map(part => part.trim())
           if (addressParts.length >= 2) {
-            data.city = addressParts[addressParts.length - 2]?.trim()
-            const lastPart = addressParts[addressParts.length - 1]?.trim()
-            if (lastPart) {
-              // Extract state (usually first 2 letters of last part)
-              const stateMatch = lastPart.match(/^([A-Z]{2})\s/)
-              if (stateMatch) {
-                data.state = stateMatch[1]
-              }
+            const lastPart = addressParts[addressParts.length - 1]
+            const stateZipMatch = lastPart.match(/^([A-Z]{2})\s+(\d{5}(-\d{4})?)$/)
+            if (stateZipMatch) {
+              data.state = stateZipMatch[1]
+              data.city = addressParts[addressParts.length - 2]
             }
           }
         }
       }
 
       // Extract Phone
-      data.phone = cleanText(extractTableValue('Phone') || extractTableValue('Telephone'))
+      data.phone = cleanText(extractTableValue('Phone'))
 
       // Extract Safety Rating
       const rawSafetyRating = extractTableValue('Safety Rating') || extractTableValue('DOT Safety Rating')
@@ -313,14 +319,16 @@ export class SAFERScraper {
         else data.safety_rating = 'not-rated'
       }
 
-      // Extract Authority Status (Operating Status)
-      const rawAuthorityStatus = extractTableValue('Operating Status') || extractTableValue('Authority Status')
+      // Extract Authority Status (Operating Authority Status)
+      const rawAuthorityStatus = extractTableValue('Operating Authority Status') || extractTableValue('Operating Status') || extractTableValue('Authority Status')
       if (rawAuthorityStatus) {
         const status = cleanText(rawAuthorityStatus)?.toLowerCase()
         if (status?.includes('authorized') || status?.includes('active')) {
           data.authority_status = 'Active'
-        } else {
+        } else if (status?.includes('not authorized')) {
           data.authority_status = 'Inactive'
+        } else {
+          data.authority_status = 'Unknown'
         }
       }
 
@@ -336,7 +344,7 @@ export class SAFERScraper {
       // Extract Power Units (vehicle count)
       const rawPowerUnits = extractTableValue('Power Units')
       if (rawPowerUnits) {
-        const units = parseInt(cleanText(rawPowerUnits) || '0')
+        const units = parseInt(cleanText(rawPowerUnits)?.replace(/,/g, '') || '0')
         if (!isNaN(units) && units > 0) {
           data.vehicle_count = units
         }
@@ -360,17 +368,27 @@ export class SAFERScraper {
       // Driver count
       const rawDrivers = extractTableValue('Drivers')
       if (rawDrivers) {
-        const drivers = parseInt(cleanText(rawDrivers) || '0')
+        const drivers = parseInt(cleanText(rawDrivers)?.replace(/,/g, '') || '0')
         if (!isNaN(drivers) && drivers > 0) {
           data.driver_count = drivers
         }
       }
 
-      // MC Number (Motor Carrier Authority)
-      data.mc_number = cleanText(extractTableValue('MC') || extractTableValue('MC Number'))
+      // MC Number (Motor Carrier Authority) - extract from MC/MX/FF Number(s)
+      const mcNumbers = extractTableValue('MC/MX/FF Number(s)') || extractTableValue('MC') || extractTableValue('MC Number')
+      if (mcNumbers) {
+        const mcText = cleanText(mcNumbers)
+        // Look for MC- pattern in the text
+        const mcMatch = mcText?.match(/MC-(\d+)/)
+        if (mcMatch) {
+          data.mc_number = `MC-${mcMatch[1]}`
+        } else {
+          data.mc_number = mcText
+        }
+      }
 
       // Operating Status (more detailed than authority status)
-      data.operating_status = cleanText(extractTableValue('Operating Status'))
+      data.operating_status = cleanText(extractTableValue('Operating Authority Status') || extractTableValue('Operating Status'))
 
       // Entity Type (Corporation, LLC, etc.)
       data.entity_type = cleanText(extractTableValue('Entity Type') || extractTableValue('Business Type'))
@@ -565,11 +583,15 @@ export class SAFERScraper {
     successful: number
     failed: number
     results: Array<{ dotNumber: string; success: boolean; data?: ScrapedCarrierData; error?: string }>
+    siteDown?: boolean
+    siteDownError?: string
   }> {
     const results = {
       successful: 0,
       failed: 0,
-      results: [] as Array<{ dotNumber: string; success: boolean; data?: ScrapedCarrierData; error?: string }>
+      results: [] as Array<{ dotNumber: string; success: boolean; data?: ScrapedCarrierData; error?: string }>,
+      siteDown: false,
+      siteDownError: undefined as string | undefined
     }
 
     console.log(`Starting bulk scrape of ${dotNumbers.length} carriers`)
@@ -582,6 +604,14 @@ export class SAFERScraper {
         
         const result = await this.scrapeCarrier(dotNumber)
         
+        // If SAFER site is down, abort batch
+        if (result.error && result.error.includes('SAFER site down')) {
+          results.siteDown = true
+          results.siteDownError = result.error
+          console.error('SAFER site appears to be down. Aborting bulk scrape.')
+          break
+        }
+
         if (result.success && result.data) {
           results.successful++
           results.results.push({
@@ -622,12 +652,25 @@ export class SAFERScraper {
   }
 
   /**
+   * Check if an entity is a carrier based on entity type and other indicators
+   */
+  private isCarrierEntity(data: ScrapedCarrierData): boolean {
+    return isCarrierEntity(data)
+  }
+
+  /**
    * Update carrier data in database
    */
   private async updateCarrierInDatabase(data: ScrapedCarrierData): Promise<void> {
     const supabase = await createClient()
     
     try {
+      // Check if this entity is actually a carrier
+      if (!this.isCarrierEntity(data)) {
+        console.log(`Skipping non-carrier entity ${data.dot_number} (${data.entity_type}): ${data.legal_name}`)
+        return
+      }
+
       const now = new Date().toISOString()
       // Update all available fields including new freight broker fields
       const updateData = {

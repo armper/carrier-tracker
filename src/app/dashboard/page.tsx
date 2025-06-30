@@ -13,7 +13,7 @@ export default async function DashboardPage() {
     redirect('/auth/login')
   }
 
-  // Fetch user's saved carriers
+  // Fetch user's saved carriers (only actual carriers, excluding brokers and other entities)
   const { data: savedCarriers, error: savedCarriersError } = await supabase
     .from('saved_carriers')
     .select(`
@@ -34,13 +34,20 @@ export default async function DashboardPage() {
         safety_rating,
         insurance_status,
         authority_status,
-        carb_compliance,
         state,
         city,
-        vehicle_count
+        vehicle_count,
+        driver_count,
+        entity_type,
+        created_at,
+        updated_at
       )
     `)
     .eq('user_id', user.id)
+    .not('carriers.entity_type', 'ilike', '%broker%')
+    .not('carriers.entity_type', 'ilike', '%freight forwarder%')
+    .not('carriers.entity_type', 'ilike', '%property broker%')
+    .not('carriers.entity_type', 'ilike', '%passenger broker%')
     .order('priority', { ascending: false })
     .order('updated_at', { ascending: false })
 
@@ -64,13 +71,20 @@ export default async function DashboardPage() {
           safety_rating,
           insurance_status,
           authority_status,
-          carb_compliance,
           state,
           city,
-          vehicle_count
+          vehicle_count,
+          driver_count,
+          entity_type,
+          created_at,
+          updated_at
         )
       `)
       .eq('user_id', user.id)
+      .not('carriers.entity_type', 'ilike', '%broker%')
+      .not('carriers.entity_type', 'ilike', '%freight forwarder%')
+      .not('carriers.entity_type', 'ilike', '%property broker%')
+      .not('carriers.entity_type', 'ilike', '%passenger broker%')
       .order('created_at', { ascending: false })
     
     fallbackCarriers = basicCarriers

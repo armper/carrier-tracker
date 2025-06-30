@@ -10,12 +10,15 @@ interface Carrier {
   physical_address: string | null
   phone: string | null
   safety_rating: string | null
-  insurance_status: string
-  authority_status: string
-  carb_compliance: boolean
+  insurance_status: string | null
+  authority_status: string | null
   state: string | null
   city: string | null
   vehicle_count: number | null
+  driver_count: number | null
+  entity_type: string | null
+  created_at: string
+  updated_at: string
   data_source?: string
   verified?: boolean
   trust_score?: number
@@ -187,15 +190,6 @@ export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton 
               carrier.authority_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
             }`}>
               {carrier.authority_status}
-            </div>
-          </div>
-          
-          <div>
-            <span className="text-sm text-gray-600 block mb-1">CARB Compliant</span>
-            <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-              carrier.carb_compliance ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
-              {carrier.carb_compliance ? 'Yes' : 'No'}
             </div>
           </div>
         </div>

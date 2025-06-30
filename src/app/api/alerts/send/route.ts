@@ -25,8 +25,7 @@ export async function POST(request: NextRequest) {
           legal_name,
           safety_rating,
           insurance_status,
-          authority_status,
-          carb_compliance
+          authority_status
         ),
         profiles (
           email,

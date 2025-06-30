@@ -2,39 +2,39 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-interface SavedCarrier {
+interface SavedCarrierWithDetails {
   id: string;
   notes: string | null;
   created_at: string;
   carriers: {
+    id: string;
     dot_number: string;
     legal_name: string;
     dba_name: string | null;
     physical_address: string | null;
     phone: string | null;
-    safety_rating: string;
-    insurance_status: string;
-    authority_status: string;
-    carb_compliance: boolean;
+    safety_rating: string | null;
+    insurance_status: string | null;
+    authority_status: string | null;
     state: string | null;
     city: string | null;
     vehicle_count: number | null;
+    driver_count: number | null;
+    entity_type: string | null;
   };
 }
 
 // CSV Export
-export function exportToCSV(savedCarriers: SavedCarrier[], filename = 'saved-carriers.csv') {
+export function exportToCSV(savedCarriers: SavedCarrierWithDetails[], filename = 'saved-carriers.csv') {
   const headers = [
     'DOT Number',
     'Legal Name', 
-    'DBA Name',
     'City',
     'State',
     'Phone',
     'Safety Rating',
     'Insurance Status',
     'Authority Status',
-    'CARB Compliant',
     'Vehicle Count',
     'Physical Address',
     'Notes',
@@ -44,14 +44,12 @@ export function exportToCSV(savedCarriers: SavedCarrier[], filename = 'saved-car
   const rows = savedCarriers.map(item => [
     item.carriers.dot_number,
     item.carriers.legal_name,
-    item.carriers.dba_name || '',
     item.carriers.city || '',
     item.carriers.state || '',
     item.carriers.phone || '',
-    item.carriers.safety_rating,
-    item.carriers.insurance_status,
-    item.carriers.authority_status,
-    item.carriers.carb_compliance ? 'Yes' : 'No',
+    item.carriers.safety_rating || '',
+    item.carriers.insurance_status || '',
+    item.carriers.authority_status || '',
     item.carriers.vehicle_count || '',
     item.carriers.physical_address || '',
     item.notes || '',
@@ -66,18 +64,16 @@ export function exportToCSV(savedCarriers: SavedCarrier[], filename = 'saved-car
 }
 
 // Excel Export
-export function exportToExcel(savedCarriers: SavedCarrier[], filename = 'saved-carriers.xlsx') {
+export function exportToExcel(savedCarriers: SavedCarrierWithDetails[], filename = 'saved-carriers.xlsx') {
   const data = savedCarriers.map(item => ({
     'DOT Number': item.carriers.dot_number,
     'Legal Name': item.carriers.legal_name,
-    'DBA Name': item.carriers.dba_name || '',
     'City': item.carriers.city || '',
     'State': item.carriers.state || '',
     'Phone': item.carriers.phone || '',
-    'Safety Rating': item.carriers.safety_rating,
-    'Insurance Status': item.carriers.insurance_status,
-    'Authority Status': item.carriers.authority_status,
-    'CARB Compliant': item.carriers.carb_compliance ? 'Yes' : 'No',
+    'Safety Rating': item.carriers.safety_rating || '',
+    'Insurance Status': item.carriers.insurance_status || '',
+    'Authority Status': item.carriers.authority_status || '',
     'Vehicle Count': item.carriers.vehicle_count || '',
     'Physical Address': item.carriers.physical_address || '',
     'Notes': item.notes || '',
@@ -103,7 +99,7 @@ export function exportToExcel(savedCarriers: SavedCarrier[], filename = 'saved-c
 }
 
 // PDF Export
-export function exportToPDF(savedCarriers: SavedCarrier[], filename = 'saved-carriers.pdf') {
+export function exportToPDF(savedCarriers: SavedCarrierWithDetails[], filename = 'saved-carriers.pdf') {
   const doc = new jsPDF();
   
   // Add header
@@ -122,8 +118,7 @@ export function exportToPDF(savedCarriers: SavedCarrier[], filename = 'saved-car
     'Safety Rating',
     'Insurance',
     'Authority',
-    'CARB',
-    'Fleet Size'
+    'Vehicle Count'
   ];
 
   const tableData = savedCarriers.map(item => [
@@ -132,10 +127,9 @@ export function exportToPDF(savedCarriers: SavedCarrier[], filename = 'saved-car
     item.carriers.city && item.carriers.state 
       ? `${item.carriers.city}, ${item.carriers.state}` 
       : item.carriers.state || '',
-    item.carriers.safety_rating,
-    item.carriers.insurance_status,
-    item.carriers.authority_status,
-    item.carriers.carb_compliance ? 'Yes' : 'No',
+    item.carriers.safety_rating || '',
+    item.carriers.insurance_status || '',
+    item.carriers.authority_status || '',
     item.carriers.vehicle_count ? String(item.carriers.vehicle_count) : ''
   ]);
 
@@ -163,8 +157,7 @@ export function exportToPDF(savedCarriers: SavedCarrier[], filename = 'saved-car
       3: { cellWidth: 20 }, // Safety Rating
       4: { cellWidth: 18 }, // Insurance
       5: { cellWidth: 18 }, // Authority
-      6: { cellWidth: 12 }, // CARB
-      7: { cellWidth: 15 }, // Fleet Size
+      6: { cellWidth: 15 }, // Vehicle Count
     },
   });
 

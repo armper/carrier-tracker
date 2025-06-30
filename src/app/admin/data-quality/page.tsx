@@ -41,9 +41,14 @@ export default async function AdminDataQualityPage() {
         api_sync_status,
         last_verified,
         api_error_count,
-        needs_verification
+        needs_verification,
+        entity_type
       `)
       .not('data_quality_score', 'is', null)
+      .not('entity_type', 'ilike', '%broker%')
+      .not('entity_type', 'ilike', '%freight forwarder%')
+      .not('entity_type', 'ilike', '%property broker%')
+      .not('entity_type', 'ilike', '%passenger broker%')
       .order('data_quality_score', { ascending: true })
       .limit(100),
 

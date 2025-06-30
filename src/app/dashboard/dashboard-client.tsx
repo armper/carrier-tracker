@@ -21,13 +21,16 @@ interface Carrier {
   dba_name: string | null
   physical_address: string | null
   phone: string | null
-  safety_rating: string
-  insurance_status: string
-  authority_status: string
-  carb_compliance: boolean
+  safety_rating: string | null
+  insurance_status: string | null
+  authority_status: string | null
   state: string | null
   city: string | null
   vehicle_count: number | null
+  driver_count: number | null
+  entity_type: string | null
+  created_at: string
+  updated_at: string
 }
 
 interface SavedCarrier {
@@ -122,7 +125,7 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
 
   const handleRemoveCarrier = async (savedCarrierId: string) => {
     const carrier = carriers.find(c => c.id === savedCarrierId)
-    if (!carrier) return
+    if (!carrier || !carrier.carriers) return
 
     // Check if this carrier has any active alerts
     const { data: alerts, error: alertsError } = await supabase
@@ -147,7 +150,7 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
       // Show confirmation modal for carriers with alerts
       setCarrierToDelete({
         id: savedCarrierId,
-        name: carrier.carriers.legal_name,
+        name: carrier.carriers.legal_name || 'Unknown Carrier',
         alertCount
       })
       setShowDeleteModal(true)
@@ -160,7 +163,7 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
 
   const performCarrierDeletion = async (savedCarrierId: string, alertIds: string[]) => {
     const carrier = carriers.find(c => c.id === savedCarrierId)
-    if (!carrier) return
+    if (!carrier || !carrier.carriers) return
 
     try {
       // Delete alerts first if any exist
@@ -190,8 +193,8 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
         type: 'success',
         title: 'Carrier Removed',
         message: alertIds.length > 0 
-          ? `${carrier.carriers.legal_name} and ${alertIds.length} alert${alertIds.length > 1 ? 's' : ''} removed.`
-          : `${carrier.carriers.legal_name} removed from your dashboard.`
+          ? `${carrier.carriers.legal_name || 'Carrier'} and ${alertIds.length} alert${alertIds.length > 1 ? 's' : ''} removed.`
+          : `${carrier.carriers.legal_name || 'Carrier'} removed from your dashboard.`
       })
 
       // Close modal if open
@@ -213,7 +216,7 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
     if (!carrierToDelete || deleteConfirmText.toLowerCase() !== 'delete') return
 
     const carrier = carriers.find(c => c.id === carrierToDelete.id)
-    if (!carrier) return
+    if (!carrier || !carrier.carriers) return
 
     // Get alert IDs for deletion
     const { data: alerts } = await supabase
@@ -351,7 +354,7 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
       // Delete all selected carriers
       const deletePromises = Array.from(selectedCarriers).map(async (carrierId) => {
         const carrier = carriers.find(c => c.id === carrierId)
-        if (!carrier) return
+        if (!carrier || !carrier.carriers) return
 
         // Delete any alerts first
         await supabase
@@ -528,6 +531,11 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
 
   // Calculate risk level for filtering
   const getRiskLevel = (savedCarrier: SavedCarrier) => {
+    // Check if carrier data exists
+    if (!savedCarrier.carriers) {
+      return 'low' // Default to low risk if carrier data is missing
+    }
+    
     const rating = savedCarrier.carriers.safety_rating?.toLowerCase()
     const insurance = savedCarrier.carriers.insurance_status === 'Active'
     const authority = savedCarrier.carriers.authority_status === 'Active'
@@ -543,15 +551,16 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
 
   // Filter and sort carriers based on dashboard filters
   const filteredAndSortedCarriers = useMemo(() => {
-    let filtered = [...carriers]
+    // Filter out saved carriers with null or missing carrier data
+    let filtered = carriers.filter(c => c.carriers != null)
 
     // Apply search filter
     if (dashboardFilters.search) {
       const searchTerm = dashboardFilters.search.toLowerCase()
       filtered = filtered.filter(c => 
-        c.carriers.legal_name.toLowerCase().includes(searchTerm) ||
-        c.carriers.dba_name?.toLowerCase().includes(searchTerm) ||
-        c.carriers.dot_number.includes(searchTerm) ||
+        c.carriers?.legal_name?.toLowerCase().includes(searchTerm) ||
+        c.carriers?.dba_name?.toLowerCase().includes(searchTerm) ||
+        c.carriers?.dot_number?.includes(searchTerm) ||
         c.notes?.toLowerCase().includes(searchTerm) ||
         c.tags?.some(tag => tag.toLowerCase().includes(searchTerm))
       )
@@ -570,8 +579,8 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
     // Apply compliance filter
     if (dashboardFilters.compliance !== 'all') {
       filtered = filtered.filter(c => {
-        const insurance = c.carriers.insurance_status === 'Active'
-        const authority = c.carriers.authority_status === 'Active'
+        const insurance = c.carriers?.insurance_status === 'Active'
+        const authority = c.carriers?.authority_status === 'Active'
         
         switch (dashboardFilters.compliance) {
           case 'compliant':
@@ -597,7 +606,7 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
     filtered.sort((a, b) => {
       switch (dashboardFilters.sortBy) {
         case 'name':
-          return a.carriers.legal_name.localeCompare(b.carriers.legal_name)
+          return (a.carriers?.legal_name || '').localeCompare(b.carriers?.legal_name || '')
         case 'added':
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         case 'updated':
@@ -642,8 +651,8 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
           groupKey = carrier.priority ? `${carrier.priority.charAt(0).toUpperCase() + carrier.priority.slice(1)} Priority` : 'Medium Priority'
           break
         case 'status':
-          const insurance = carrier.carriers.insurance_status === 'Active'
-          const authority = carrier.carriers.authority_status === 'Active'
+          const insurance = carrier.carriers?.insurance_status === 'Active'
+          const authority = carrier.carriers?.authority_status === 'Active'
           groupKey = insurance && authority ? 'Fully Compliant' : 
                     (insurance || authority) ? 'Partial Compliance' : 'Non-Compliant'
           break
@@ -972,7 +981,7 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
                           key={savedCarrier.id}
                           savedCarrier={savedCarrier}
                           isSelected={selectedCarriers.has(savedCarrier.id)}
-                          isAlerted={alertedCarrierIds.has(savedCarrier.carriers.id)}
+                          isAlerted={savedCarrier.carriers ? alertedCarrierIds.has(savedCarrier.carriers.id) : false}
                           onSelect={handleSelectCarrier}
                           onRemove={handleRemoveCarrier}
                           onEdit={startEditing}
@@ -1167,7 +1176,7 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
       {/* Edit Carrier Modal */}
       {editingCarrier && (() => {
         const carrier = carriers.find(c => c.id === editingCarrier)
-        if (!carrier) return null
+        if (!carrier || !carrier.carriers) return null
         
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1175,7 +1184,7 @@ export default function DashboardClient({ user, savedCarriers, alertedCarrierIds
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-semibold text-gray-900">
-                    Edit Carrier Details: {carrier.carriers.legal_name}
+                    Edit Carrier Details: {carrier.carriers.legal_name || 'Unknown Carrier'}
                   </h3>
                   <button
                     onClick={cancelEditing}

@@ -14,10 +14,74 @@ interface CarrierData {
   safety_rating?: string
   insurance_status?: string
   authority_status?: string
-  carb_compliance?: boolean
   state?: string
   city?: string
   vehicle_count?: number
+  out_of_service_date?: string
+  mcs_150_date?: string
+  operation_classification?: string[]
+  carrier_operation?: string[]
+  // Additional fields useful for freight brokers
+  driver_count?: number
+  safety_review_date?: string
+  safety_rating_date?: string
+  total_mileage?: number
+  interstate_operation?: boolean
+  hazmat_flag?: boolean
+  passenger_flag?: boolean
+  migrant_flag?: boolean
+  pc_flag?: boolean // Private carrier flag
+  crash_indicator?: string
+  inspection_indicator?: string
+  entity_type?: string // Corporation, Partnership, etc.
+  ein_number?: string // Federal Tax ID
+  mc_number?: string // Motor Carrier number
+  mx_number?: string // Mexico number
+  operating_status?: string
+  credit_score?: string
+  
+  // Enhanced fields for freight brokers
+  // Safety & Compliance History
+  crash_count?: number
+  fatal_crashes?: number
+  injury_crashes?: number
+  tow_away_crashes?: number
+  inspection_count?: number
+  inspection_violations?: number
+  out_of_service_orders?: number
+  out_of_service_rate?: number
+  driver_inspections?: number
+  vehicle_inspections?: number
+  
+  // Insurance & Financial
+  insurance_carrier?: string
+  insurance_policy_number?: string
+  insurance_amount?: number
+  insurance_effective_date?: string
+  insurance_expiry_date?: string
+  cargo_insurance_amount?: number
+  financial_responsibility_status?: string
+  
+  // Operational Details
+  equipment_types?: string[] // dry van, flatbed, refrigerated, etc.
+  service_areas?: string[] // states/cities they operate in
+  years_in_business?: number
+  annual_revenue?: number
+  fleet_age?: number // average age of vehicles
+  
+  // Additional Compliance
+  drug_testing_program?: boolean
+  alcohol_testing_program?: boolean
+  hazmat_certification?: boolean
+  passenger_certification?: boolean
+  school_bus_certification?: boolean
+  
+  // Contact & Business
+  email?: string
+  website?: string
+  emergency_contact?: string
+  emergency_phone?: string
+  business_hours?: string
 }
 
 interface SyncResult {

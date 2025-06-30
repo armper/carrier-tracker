@@ -90,7 +90,7 @@ BEGIN
       WHEN v_days_since_verification > 180 THEN v_score := v_score - 30;
       WHEN v_days_since_verification > 90 THEN v_score := v_score - 20;
       WHEN v_days_since_verification > 30 THEN v_score := v_score - 10;
-      -- Less than 30 days is good, no penalty
+      ELSE v_score := v_score - 0; -- Less than 30 days is good, no penalty
     END CASE;
   END IF;
   
@@ -100,6 +100,7 @@ BEGIN
     WHEN v_error_count > 5 THEN v_score := v_score - 25;
     WHEN v_error_count > 2 THEN v_score := v_score - 15;
     WHEN v_error_count > 0 THEN v_score := v_score - 5;
+    ELSE v_score := v_score - 0; -- No errors, no penalty
   END CASE;
   
   -- Check for missing critical fields (max penalty: -20 points)
@@ -127,6 +128,7 @@ BEGIN
     WHEN 'saferwebapi' THEN v_score := v_score - 5; -- Small penalty for 3rd party
     WHEN 'manual' THEN v_score := v_score - 10; -- Penalty for manual entry
     WHEN 'import' THEN v_score := v_score - 15; -- Penalty for bulk import
+    ELSE v_score := v_score - 10; -- Default penalty for unknown sources
   END CASE;
   
   -- Check for active quality issues (max penalty: -10 points)

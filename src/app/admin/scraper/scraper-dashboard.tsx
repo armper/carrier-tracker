@@ -63,6 +63,7 @@ export default function ScraperDashboard({ carriers, recentJobs, recentSyncs, st
   const [selectedTab, setSelectedTab] = useState<'overview' | 'jobs' | 'carriers' | 'logs'>('overview')
   const [jobInProgress, setJobInProgress] = useState(false)
   const [jobStatus, setJobStatus] = useState<string | null>(null)
+  const [siteDownError, setSiteDownError] = useState<string | null>(null)
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString()
@@ -126,6 +127,7 @@ export default function ScraperDashboard({ carriers, recentJobs, recentSyncs, st
   const handleDiscoverCarriers = async (strategy: 'sequential' | 'random') => {
     setJobInProgress(true)
     setJobStatus(null)
+    setSiteDownError(null)
 
     try {
       const response = await fetch('/api/scraper/discover', {
@@ -139,6 +141,12 @@ export default function ScraperDashboard({ carriers, recentJobs, recentSyncs, st
       })
 
       const result = await response.json()
+
+      if (result.siteDown) {
+        setSiteDownError(result.siteDownError || 'The SAFER website is currently unavailable. Please try again later.')
+        setJobStatus(null)
+        return
+      }
 
       if (result.success) {
         setJobStatus(`✅ ${result.summary}! Success rate: ${result.results.successRate}%`)
@@ -158,7 +166,11 @@ export default function ScraperDashboard({ carriers, recentJobs, recentSyncs, st
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Scraping Controls</h3>
-        
+        {siteDownError && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-300 text-red-800 rounded">
+            <strong>SAFER Website Unavailable:</strong> {siteDownError}
+          </div>
+        )}
         {/* Carrier Discovery Section */}
         <div className="mb-6">
           <h4 className="text-md font-medium text-gray-800 mb-3">🔍 Carrier Discovery (Add New Carriers)</h4>
@@ -247,7 +259,7 @@ export default function ScraperDashboard({ carriers, recentJobs, recentSyncs, st
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <div className="flex items-center">
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600">Stale Data (>30 days)</p>
+              <p className="text-sm font-medium text-gray-600">Stale Data (&gt;30 days)</p>
               <p className="text-2xl font-bold text-gray-900">{stats.staleCarriers.toLocaleString()}</p>
             </div>
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -333,7 +345,7 @@ export default function ScraperDashboard({ carriers, recentJobs, recentSyncs, st
                 <span className="text-sm font-medium text-gray-600">{stats.neverSynced}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Stale (>30 days)</span>
+                <span className="text-sm text-gray-600">Stale (&gt;30 days)</span>
                 <span className="text-sm font-medium text-orange-600">{stats.staleCarriers}</span>
               </div>
               <div className="flex justify-between">
