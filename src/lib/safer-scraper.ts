@@ -41,6 +41,49 @@ interface ScrapedCarrierData {
   mx_number?: string // Mexico number
   operating_status?: string
   credit_score?: string
+  
+  // Enhanced fields for freight brokers
+  // Safety & Compliance History
+  crash_count?: number
+  fatal_crashes?: number
+  injury_crashes?: number
+  tow_away_crashes?: number
+  inspection_count?: number
+  inspection_violations?: number
+  out_of_service_orders?: number
+  out_of_service_rate?: number
+  driver_inspections?: number
+  vehicle_inspections?: number
+  
+  // Insurance & Financial
+  insurance_carrier?: string
+  insurance_policy_number?: string
+  insurance_amount?: number
+  insurance_effective_date?: string
+  insurance_expiry_date?: string
+  cargo_insurance_amount?: number
+  financial_responsibility_status?: string
+  
+  // Operational Details
+  equipment_types?: string[] // dry van, flatbed, refrigerated, etc.
+  service_areas?: string[] // states/cities they operate in
+  years_in_business?: number
+  annual_revenue?: number
+  fleet_age?: number // average age of vehicles
+  
+  // Additional Compliance
+  drug_testing_program?: boolean
+  alcohol_testing_program?: boolean
+  hazmat_certification?: boolean
+  passenger_certification?: boolean
+  school_bus_certification?: boolean
+  
+  // Contact & Business
+  email?: string
+  website?: string
+  emergency_contact?: string
+  emergency_phone?: string
+  business_hours?: string
 }
 
 interface ScrapeResult {
@@ -363,6 +406,146 @@ export class SAFERScraper {
         }
       }
 
+      // Enhanced parsing for freight broker critical data
+      
+      // Crash Data
+      const crashData = extractTableValue('Crashes') || extractTableValue('Crash Data')
+      if (crashData) {
+        const crashText = cleanText(crashData)
+        const crashMatch = crashText?.match(/(\d+)/)
+        if (crashMatch) {
+          data.crash_count = parseInt(crashMatch[1])
+        }
+      }
+
+      // Fatal Crashes
+      const fatalCrashes = extractTableValue('Fatal Crashes') || extractTableValue('Fatalities')
+      if (fatalCrashes) {
+        const fatalText = cleanText(fatalCrashes)
+        const fatalMatch = fatalText?.match(/(\d+)/)
+        if (fatalMatch) {
+          data.fatal_crashes = parseInt(fatalMatch[1])
+        }
+      }
+
+      // Injury Crashes
+      const injuryCrashes = extractTableValue('Injury Crashes') || extractTableValue('Injuries')
+      if (injuryCrashes) {
+        const injuryText = cleanText(injuryCrashes)
+        const injuryMatch = injuryText?.match(/(\d+)/)
+        if (injuryMatch) {
+          data.injury_crashes = parseInt(injuryMatch[1])
+        }
+      }
+
+      // Inspection Data
+      const inspectionData = extractTableValue('Inspections') || extractTableValue('Inspection Data')
+      if (inspectionData) {
+        const inspectionText = cleanText(inspectionData)
+        const inspectionMatch = inspectionText?.match(/(\d+)/)
+        if (inspectionMatch) {
+          data.inspection_count = parseInt(inspectionMatch[1])
+        }
+      }
+
+      // Out of Service Orders
+      const oosData = extractTableValue('Out of Service') || extractTableValue('OOS Orders')
+      if (oosData) {
+        const oosText = cleanText(oosData)
+        const oosMatch = oosText?.match(/(\d+)/)
+        if (oosMatch) {
+          data.out_of_service_orders = parseInt(oosMatch[1])
+        }
+      }
+
+      // Calculate Out of Service Rate
+      if (data.inspection_count && data.out_of_service_orders) {
+        data.out_of_service_rate = Math.round((data.out_of_service_orders / data.inspection_count) * 100)
+      }
+
+      // Insurance Information
+      data.insurance_carrier = cleanText(extractTableValue('Insurance Carrier') || extractTableValue('Insurance Company'))
+      data.insurance_policy_number = cleanText(extractTableValue('Policy Number') || extractTableValue('Insurance Policy'))
+      
+      const insuranceAmount = extractTableValue('Insurance Amount') || extractTableValue('Liability Insurance')
+      if (insuranceAmount) {
+        const amountText = cleanText(insuranceAmount)
+        const amountMatch = amountText?.match(/\$?([\d,]+)/)
+        if (amountMatch) {
+          data.insurance_amount = parseInt(amountMatch[1].replace(/,/g, ''))
+        }
+      }
+
+      const cargoInsurance = extractTableValue('Cargo Insurance') || extractTableValue('Cargo Coverage')
+      if (cargoInsurance) {
+        const cargoText = cleanText(cargoInsurance)
+        const cargoMatch = cargoText?.match(/\$?([\d,]+)/)
+        if (cargoMatch) {
+          data.cargo_insurance_amount = parseInt(cargoMatch[1].replace(/,/g, ''))
+        }
+      }
+
+      // Insurance Dates
+      data.insurance_effective_date = cleanText(extractTableValue('Insurance Effective Date'))
+      data.insurance_expiry_date = cleanText(extractTableValue('Insurance Expiry Date') || extractTableValue('Insurance Expiration'))
+
+      // Financial Responsibility
+      data.financial_responsibility_status = cleanText(extractTableValue('Financial Responsibility') || extractTableValue('Financial Status'))
+
+      // Equipment Types (from operation classification)
+      const operationClass = cleanText(extractTableValue('Operation Classification'))
+      if (operationClass) {
+        data.equipment_types = [operationClass]
+        // Add common equipment types based on operation classification
+        if (operationClass.toLowerCase().includes('general freight')) {
+          data.equipment_types.push('dry van')
+        }
+        if (operationClass.toLowerCase().includes('flatbed')) {
+          data.equipment_types.push('flatbed')
+        }
+        if (operationClass.toLowerCase().includes('refrigerated')) {
+          data.equipment_types.push('refrigerated')
+        }
+        if (operationClass.toLowerCase().includes('tanker')) {
+          data.equipment_types.push('tanker')
+        }
+      }
+
+      // Service Areas (from interstate operation and state)
+      if (data.interstate_operation) {
+        data.service_areas = ['Interstate']
+      }
+      if (data.state) {
+        data.service_areas = data.service_areas || []
+        data.service_areas.push(data.state)
+      }
+
+      // Years in Business (estimate from MCS-150 date)
+      if (data.mcs_150_date) {
+        const mcsDate = new Date(data.mcs_150_date)
+        const currentYear = new Date().getFullYear()
+        const yearsInBusiness = currentYear - mcsDate.getFullYear()
+        if (yearsInBusiness > 0 && yearsInBusiness < 100) {
+          data.years_in_business = yearsInBusiness
+        }
+      }
+
+      // Additional Compliance Flags
+      data.hazmat_certification = data.hazmat_flag
+      data.passenger_certification = data.passenger_flag
+      
+      // Drug/Alcohol Testing (usually required for interstate carriers)
+      if (data.interstate_operation) {
+        data.drug_testing_program = true
+        data.alcohol_testing_program = true
+      }
+
+      // Contact Information
+      data.email = cleanText(extractTableValue('Email') || extractTableValue('E-mail'))
+      data.website = cleanText(extractTableValue('Website') || extractTableValue('Web Site'))
+      data.emergency_contact = cleanText(extractTableValue('Emergency Contact'))
+      data.emergency_phone = cleanText(extractTableValue('Emergency Phone') || extractTableValue('Emergency Contact Phone'))
+
       console.log(`Successfully parsed data for DOT ${dotNumber}: ${data.legal_name}`)
       
     } catch (error) {
@@ -480,6 +663,41 @@ export class SAFERScraper {
         mcs_150_date: data.mcs_150_date,
         operation_classification: data.operation_classification,
         carrier_operation: data.carrier_operation,
+        // Enhanced freight broker fields
+        crash_count: data.crash_count,
+        fatal_crashes: data.fatal_crashes,
+        injury_crashes: data.injury_crashes,
+        tow_away_crashes: data.tow_away_crashes,
+        inspection_count: data.inspection_count,
+        inspection_violations: data.inspection_violations,
+        out_of_service_orders: data.out_of_service_orders,
+        out_of_service_rate: data.out_of_service_rate,
+        driver_inspections: data.driver_inspections,
+        vehicle_inspections: data.vehicle_inspections,
+        insurance_carrier: data.insurance_carrier,
+        insurance_policy_number: data.insurance_policy_number,
+        insurance_amount: data.insurance_amount,
+        insurance_effective_date: data.insurance_effective_date,
+        insurance_expiry_date: data.insurance_expiry_date,
+        cargo_insurance_amount: data.cargo_insurance_amount,
+        financial_responsibility_status: data.financial_responsibility_status,
+        equipment_types: data.equipment_types,
+        service_areas: data.service_areas,
+        years_in_business: data.years_in_business,
+        annual_revenue: data.annual_revenue,
+        fleet_age: data.fleet_age,
+        drug_testing_program: data.drug_testing_program,
+        alcohol_testing_program: data.alcohol_testing_program,
+        hazmat_certification: data.hazmat_certification,
+        passenger_certification: data.passenger_certification,
+        school_bus_certification: data.school_bus_certification,
+        email: data.email,
+        website: data.website,
+        emergency_contact: data.emergency_contact,
+        emergency_phone: data.emergency_phone,
+        business_hours: data.business_hours,
+        data_source: 'safer_scraper', // Always set to scraper when updated by scraper
+        last_verified: now,
         updated_at: now
       }
 
@@ -507,7 +725,6 @@ export class SAFERScraper {
           .insert({
             ...updateData,
             dot_number: data.dot_number,
-            data_source: 'safer_scraper',
             created_at: now
           })
 

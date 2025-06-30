@@ -13,8 +13,9 @@ async function checkDatabase() {
     // Check if carriers table exists and has data
     const { data: carriers, error } = await supabase
       .from('carriers')
-      .select('*')
-      .limit(5)
+      .select('dot_number, legal_name, data_source, created_at')
+      .order('created_at', { ascending: false })
+      .limit(10)
     
     if (error) {
       console.log('❌ Error querying carriers table:', error.message)
@@ -24,8 +25,12 @@ async function checkDatabase() {
     
     console.log(`✅ Carriers table exists with ${carriers?.length || 0} records`)
     if (carriers && carriers.length > 0) {
-      console.log('📋 Sample carriers:')
-      carriers.forEach(c => console.log(`  - DOT ${c.dot_number}: ${c.legal_name}`))
+      console.log('📋 Recent carriers:')
+      carriers.forEach(c => {
+        const source = c.data_source || 'NULL';
+        const date = new Date(c.created_at).toLocaleString();
+        console.log(`  - DOT ${c.dot_number}: ${c.legal_name} (Source: ${source}, Created: ${date})`)
+      })
     }
     
     return carriers && carriers.length > 0

@@ -123,55 +123,6 @@ export default function ScraperDashboard({ carriers, recentJobs, recentSyncs, st
     }
   }
 
-  const handleTestScraper = async () => {
-    setJobInProgress(true)
-    setJobStatus(null)
-
-    try {
-      const response = await fetch('/api/scraper/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dotNumber: '1174814' })
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        setJobStatus(`✅ Test scraping completed! Found: ${result.result?.data?.legal_name || 'No data'}`)
-      } else {
-        setJobStatus(`❌ Test scraping failed: ${result.error}`)
-      }
-    } catch (error) {
-      setJobStatus(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    } finally {
-      setJobInProgress(false)
-    }
-  }
-
-  const handleAddTestCarriers = async () => {
-    setJobInProgress(true)
-    setJobStatus(null)
-
-    try {
-      const response = await fetch('/api/scraper/add-test-carriers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        setJobStatus(`✅ ${result.message}! Added ${result.summary.successful} carriers ready for scraping.`)
-      } else {
-        setJobStatus(`❌ Failed to add test carriers: ${result.error}`)
-      }
-    } catch (error) {
-      setJobStatus(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    } finally {
-      setJobInProgress(false)
-    }
-  }
-
   const handleDiscoverCarriers = async (strategy: 'sequential' | 'random') => {
     setJobInProgress(true)
     setJobStatus(null)
@@ -230,7 +181,7 @@ export default function ScraperDashboard({ carriers, recentJobs, recentSyncs, st
         </div>
 
         {/* Data Refresh Section */}
-        <div className="mb-6">
+        <div>
           <h4 className="text-md font-medium text-gray-800 mb-3">🔄 Data Refresh (Update Existing)</h4>
           <div className="flex flex-wrap gap-3">
             <button
@@ -254,34 +205,6 @@ export default function ScraperDashboard({ carriers, recentJobs, recentSyncs, st
             >
               {jobInProgress ? 'Starting...' : 'New Carriers Only (3 carriers)'}
             </button>
-          </div>
-        </div>
-
-        {/* Testing Section */}
-        <div>
-          <h4 className="text-md font-medium text-gray-800 mb-3">🧪 Testing & Debug</h4>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={handleTestScraper}
-              disabled={jobInProgress}
-              className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
-            >
-              {jobInProgress ? 'Testing...' : 'Test Single Scraper'}
-            </button>
-            <button
-              onClick={handleAddTestCarriers}
-              disabled={jobInProgress}
-              className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:opacity-50"
-            >
-              {jobInProgress ? 'Adding...' : 'Add Test Data'}
-            </button>
-            <Link
-              href="/api/scraper/check-available"
-              target="_blank"
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-            >
-              Check Database
-            </Link>
           </div>
         </div>
         {jobStatus && (

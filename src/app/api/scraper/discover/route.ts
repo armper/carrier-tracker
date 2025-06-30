@@ -201,45 +201,51 @@ async function addNewCarrier(supabase: any, carrierData: any): Promise<{success:
       }
     )
 
+    const insertData = {
+      dot_number: carrierData.dot_number,
+      legal_name: carrierData.legal_name,
+      dba_name: carrierData.dba_name,
+      physical_address: carrierData.physical_address,
+      phone: carrierData.phone,
+      safety_rating: carrierData.safety_rating,
+      insurance_status: carrierData.insurance_status,
+      authority_status: carrierData.authority_status,
+      state: carrierData.state,
+      city: carrierData.city,
+      vehicle_count: carrierData.vehicle_count,
+      // New freight broker fields
+      driver_count: carrierData.driver_count,
+      safety_review_date: carrierData.safety_review_date,
+      safety_rating_date: carrierData.safety_rating_date,
+      total_mileage: carrierData.total_mileage,
+      interstate_operation: carrierData.interstate_operation,
+      hazmat_flag: carrierData.hazmat_flag,
+      passenger_flag: carrierData.passenger_flag,
+      migrant_flag: carrierData.migrant_flag,
+      pc_flag: carrierData.pc_flag,
+      crash_indicator: carrierData.crash_indicator,
+      inspection_indicator: carrierData.inspection_indicator,
+      entity_type: carrierData.entity_type,
+      ein_number: carrierData.ein_number,
+      mc_number: carrierData.mc_number,
+      mx_number: carrierData.mx_number,
+      operating_status: carrierData.operating_status,
+      credit_score: carrierData.credit_score,
+      out_of_service_date: carrierData.out_of_service_date,
+      mcs_150_date: carrierData.mcs_150_date,
+      operation_classification: carrierData.operation_classification,
+      carrier_operation: carrierData.carrier_operation,
+      data_source: 'safer_scraper',
+      last_verified: new Date().toISOString(),
+      api_sync_status: 'synced',
+      created_at: new Date().toISOString()
+    }
+
+    console.log(`Inserting new carrier ${carrierData.dot_number} with data_source: ${insertData.data_source}`)
+
     const { data, error } = await serviceSupabase
       .from('carriers')
-      .insert({
-        dot_number: carrierData.dot_number,
-        legal_name: carrierData.legal_name,
-        dba_name: carrierData.dba_name,
-        physical_address: carrierData.physical_address,
-        phone: carrierData.phone,
-        safety_rating: carrierData.safety_rating,
-        insurance_status: carrierData.insurance_status,
-        authority_status: carrierData.authority_status,
-        state: carrierData.state,
-        city: carrierData.city,
-        vehicle_count: carrierData.vehicle_count,
-        // New freight broker fields
-        driver_count: carrierData.driver_count,
-        safety_review_date: carrierData.safety_review_date,
-        safety_rating_date: carrierData.safety_rating_date,
-        total_mileage: carrierData.total_mileage,
-        interstate_operation: carrierData.interstate_operation,
-        hazmat_flag: carrierData.hazmat_flag,
-        passenger_flag: carrierData.passenger_flag,
-        migrant_flag: carrierData.migrant_flag,
-        pc_flag: carrierData.pc_flag,
-        crash_indicator: carrierData.crash_indicator,
-        inspection_indicator: carrierData.inspection_indicator,
-        entity_type: carrierData.entity_type,
-        ein_number: carrierData.ein_number,
-        mc_number: carrierData.mc_number,
-        mx_number: carrierData.mx_number,
-        operating_status: carrierData.operating_status,
-        credit_score: carrierData.credit_score,
-        out_of_service_date: carrierData.out_of_service_date,
-        mcs_150_date: carrierData.mcs_150_date,
-        operation_classification: carrierData.operation_classification,
-        carrier_operation: carrierData.carrier_operation,
-        data_source: 'safer_scraper',
-        created_at: new Date().toISOString()
-      })
+      .insert(insertData)
       .select()
 
     if (error) {
@@ -247,8 +253,14 @@ async function addNewCarrier(supabase: any, carrierData: any): Promise<{success:
       return { success: false, error: error.message }
     }
 
+    // Verify the data was inserted correctly
+    if (data && data[0]) {
+      console.log(`Successfully inserted carrier ${carrierData.dot_number} with data_source: ${data[0].data_source}`)
+    }
+
     return { success: true }
   } catch (error) {
+    console.error(`Exception in addNewCarrier for ${carrierData.dot_number}:`, error)
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Database insert failed' 

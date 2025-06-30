@@ -111,11 +111,13 @@ export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton 
               {/* Data Source Badge */}
               {carrier.data_source && (
                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                  carrier.data_source === 'fmcsa' 
+                  carrier.data_source === 'fmcsa' || carrier.data_source === 'safer_scraper'
                     ? 'bg-green-100 text-green-800' 
                     : 'bg-blue-100 text-blue-800'
                 }`}>
-                  {carrier.data_source === 'fmcsa' ? '🏛️ FMCSA' : '📝 Manual'}
+                  {carrier.data_source === 'fmcsa' ? '🏛️ FMCSA' : 
+                   carrier.data_source === 'safer_scraper' ? '🤖 SAFER' :
+                   '📝 Manual'}
                 </span>
               )}
               

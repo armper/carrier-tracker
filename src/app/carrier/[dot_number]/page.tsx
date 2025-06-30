@@ -20,12 +20,12 @@ export default async function CarrierDetailPage({ params }: PageProps) {
     .eq('dot_number', dot_number)
     .single()
 
-  // Check if carrier data is stale (older than 7 days for FMCSA data, 30 days for manual)
+  // Check if carrier data is stale (older than 7 days for FMCSA/SAFER data, 30 days for manual)
   let shouldRefresh = false
   if (carrier) {
     const lastUpdate = carrier.updated_at
     const hoursOld = lastUpdate ? (Date.now() - new Date(lastUpdate).getTime()) / (1000 * 60 * 60) : Infinity
-    const staleThreshold = carrier.data_source === 'fmcsa' ? 168 : 720 // 7 days vs 30 days
+    const staleThreshold = (carrier.data_source === 'fmcsa' || carrier.data_source === 'safer_scraper') ? 168 : 720 // 7 days vs 30 days
     shouldRefresh = hoursOld > staleThreshold
   }
 
@@ -117,11 +117,13 @@ export default async function CarrierDetailPage({ params }: PageProps) {
             <div className="flex flex-col items-end gap-2">
               {/* Data Source Badge */}
               <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
-                carrier.data_source === 'fmcsa' 
+                carrier.data_source === 'fmcsa' || carrier.data_source === 'safer_scraper'
                   ? 'bg-green-100 text-green-800' 
                   : 'bg-blue-100 text-blue-800'
               }`}>
-                {carrier.data_source === 'fmcsa' ? '🏛️ FMCSA Data' : '📝 Manual Entry'}
+                {carrier.data_source === 'fmcsa' ? '🏛️ FMCSA Data' : 
+                 carrier.data_source === 'safer_scraper' ? '🤖 SAFER Scraper' :
+                 '📝 Manual Entry'}
               </span>
               
               {/* Trust Score */}

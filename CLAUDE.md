@@ -21,6 +21,78 @@ CarrierTracker is a carrier411 competitor - a transportation carrier monitoring 
 - `npm run db:seed` - Seed database with sample data
 - `npm run migrate:build` - Run migrations during Vercel build process
 
+### Database Connection & Direct Updates
+
+#### Connection String
+For direct database access via `psql`:
+```
+postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require
+```
+
+#### Applying Migrations Directly
+```bash
+# Apply a specific migration file
+psql "postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require" -f supabase/migrations/20250629000005_add_safety_rating_history.sql
+
+# Apply multiple migrations in order
+psql "postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require" -f supabase/migrations/20250629000006_add_smart_suggestions.sql
+```
+
+#### Database Queries & Maintenance
+```bash
+# Check table structure
+psql "postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require" -c "\d table_name"
+
+# Check if table exists
+psql "postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require" -c "SELECT COUNT(*) FROM table_name;"
+
+# Check RLS policies
+psql "postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require" -c "\d+ table_name"
+
+# Test functions
+psql "postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require" -c "SELECT function_name('parameter');"
+```
+
+#### Common Database Operations
+```bash
+# Check user data
+psql "postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require" -c "SELECT id, email FROM profiles WHERE id = 'user-uuid';"
+
+# Check saved carriers
+psql "postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require" -c "SELECT COUNT(*) FROM saved_carriers WHERE user_id = 'user-uuid';"
+
+# Generate suggestions for user
+psql "postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require" -c "SELECT generate_user_suggestions('user-uuid');"
+
+# Check safety rating history
+psql "postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require" -c "SELECT COUNT(*) FROM safety_rating_history WHERE carrier_id = 'carrier-uuid';"
+```
+
+#### Fixing Common Issues
+```bash
+# Drop and recreate problematic functions
+psql "postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require" -c "DROP FUNCTION IF EXISTS function_name(uuid, integer);"
+
+# Fix ambiguous column references
+psql "postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require" -c "CREATE OR REPLACE FUNCTION function_name(...) AS \$\$ ... \$\$ LANGUAGE plpgsql;"
+
+# Recreate indexes
+psql "postgres://postgres.axmnmxwjijsigiueednz:TM6AjlDrYQUENODF@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require" -c "CREATE INDEX IF NOT EXISTS index_name ON table_name(column_name);"
+```
+
+#### Environment Variables
+Required for database access:
+- `NEXT_PUBLIC_SUPABASE_URL` - Project URL
+- `SUPABASE_SERVICE_ROLE_KEY` - Service role key for admin operations
+- Connection string includes password and host details
+
+#### Troubleshooting Database Issues
+1. **406 Not Acceptable**: Usually RLS policy blocking query - check user permissions
+2. **404 Not Found**: Table/function doesn't exist - apply missing migrations
+3. **500 Internal Server Error**: Function errors - check SQL syntax and table aliases
+4. **Ambiguous column reference**: Use table aliases in SQL functions
+5. **Function not found**: Drop and recreate with corrected syntax
+
 ## Architecture
 
 ### Tech Stack
