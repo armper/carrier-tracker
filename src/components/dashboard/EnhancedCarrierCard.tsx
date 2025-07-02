@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import InsuranceStatus from '../InsuranceStatus'
+import InsuranceUpdateForm from '../InsuranceUpdateForm'
 
 interface Carrier {
   id: string
@@ -20,13 +22,7 @@ interface Carrier {
   entity_type: string | null
   created_at: string
   updated_at: string
-  // Insurance tracking fields
-  insurance_expiry_date?: string | null
-  insurance_carrier?: string | null
-  insurance_policy_number?: string | null
-  insurance_amount?: number | null
-  insurance_effective_date?: string | null
-  insurance_last_verified?: string | null
+  // Insurance fields removed - using crowd-sourced data instead
 }
 
 interface SavedCarrier {
@@ -62,6 +58,8 @@ export default function EnhancedCarrierCard({
   const [isHovered, setIsHovered] = useState(false)
   const [quickEditMode, setQuickEditMode] = useState<string | null>(null)
   const [quickNote, setQuickNote] = useState(savedCarrier.notes || '')
+  const [showInsuranceForm, setShowInsuranceForm] = useState(false)
+  const [insuranceKey, setInsuranceKey] = useState(0)
   
   const carrier = savedCarrier.carriers
   
@@ -128,50 +126,12 @@ export default function EnhancedCarrierCard({
     }
   }
 
-  const getInsuranceStatus = () => {
-    if (!carrier.insurance_expiry_date) {
-      return {
-        status: carrier.insurance_status,
-        color: carrier.insurance_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
-        warning: null
-      }
-    }
+  const handleInsuranceUpdate = () => {
+    setShowInsuranceForm(true)
+  }
 
-    const expiryDate = new Date(carrier.insurance_expiry_date)
-    const today = new Date()
-    const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-    
-    if (daysUntilExpiry < 0) {
-      return {
-        status: 'EXPIRED',
-        color: 'bg-red-100 text-red-800',
-        warning: `Expired ${Math.abs(daysUntilExpiry)} days ago`
-      }
-    } else if (daysUntilExpiry <= 7) {
-      return {
-        status: 'Expires Soon',
-        color: 'bg-red-100 text-red-800',
-        warning: `Expires in ${daysUntilExpiry} days`
-      }
-    } else if (daysUntilExpiry <= 15) {
-      return {
-        status: 'Expires Soon',
-        color: 'bg-orange-100 text-orange-800',
-        warning: `Expires in ${daysUntilExpiry} days`
-      }
-    } else if (daysUntilExpiry <= 30) {
-      return {
-        status: 'Active',
-        color: 'bg-yellow-100 text-yellow-800',
-        warning: `Expires in ${daysUntilExpiry} days`
-      }
-    } else {
-      return {
-        status: 'Active',
-        color: 'bg-green-100 text-green-800',
-        warning: null
-      }
-    }
+  const handleInsuranceSuccess = () => {
+    setInsuranceKey(prev => prev + 1)
   }
 
   const handleQuickNoteSubmit = () => {
@@ -284,14 +244,14 @@ export default function EnhancedCarrierCard({
           <span className={`${safetyConfig.bg} ${safetyConfig.text} px-2 py-1 rounded-full text-xs font-bold`}>
             {safetyConfig.label}
           </span>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getInsuranceStatus().color}`}>
-            INS: {getInsuranceStatus().status}
-          </span>
-          {getInsuranceStatus().warning && (
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-              ⚠️ {getInsuranceStatus().warning}
-            </span>
-          )}
+          <div className="flex items-center">
+            <InsuranceStatus 
+              key={insuranceKey}
+              carrierId={carrier.id} 
+              showDetails={false}
+              onUpdateClick={handleInsuranceUpdate}
+            />
+          </div>
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
             carrier.authority_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
           }`}>
@@ -371,6 +331,16 @@ export default function EnhancedCarrierCard({
           )}
         </div>
       </div>
+      
+      {/* Insurance Update Form Modal */}
+      {showInsuranceForm && (
+        <InsuranceUpdateForm
+          carrierId={carrier.id}
+          carrierName={carrier.legal_name}
+          onClose={() => setShowInsuranceForm(false)}
+          onSuccess={handleInsuranceSuccess}
+        />
+      )}
     </div>
   )
 }

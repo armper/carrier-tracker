@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import SafetyRatingTrend from '@/components/SafetyRatingTrend'
+import InsuranceStatus from '@/components/InsuranceStatus'
+import InsuranceUpdateForm from '@/components/InsuranceUpdateForm'
 
 interface Carrier {
   id: string
@@ -21,13 +23,7 @@ interface Carrier {
   entity_type: string | null
   created_at: string
   updated_at: string
-  // Insurance tracking fields
-  insurance_expiry_date: string | null
-  insurance_carrier: string | null
-  insurance_policy_number: string | null
-  insurance_amount: number | null
-  insurance_effective_date: string | null
-  insurance_last_verified: string | null
+  // Insurance fields removed - using crowd-sourced data instead
 }
 
 interface CarrierDetailClientProps {
@@ -46,6 +42,8 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
   })
   const [isSubmittingReport, setIsSubmittingReport] = useState(false)
   const [reportMessage, setReportMessage] = useState('')
+  const [showInsuranceForm, setShowInsuranceForm] = useState(false)
+  const [insuranceKey, setInsuranceKey] = useState(0)
   const supabase = createClient()
 
   // Check if carrier is already saved
@@ -216,6 +214,14 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
     setIsSubmittingReport(false)
   }
 
+  const handleInsuranceUpdate = () => {
+    setShowInsuranceForm(true)
+  }
+
+  const handleInsuranceSuccess = () => {
+    setInsuranceKey(prev => prev + 1)
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Main Content */}
@@ -295,10 +301,32 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Insurance Status</label>
-              <div className={`inline-block px-4 py-2 rounded-lg border text-sm font-medium ${getStatusColor(carrier.insurance_status || 'Unknown')}`}>
-                {carrier.insurance_status || 'Unknown'}
+              <div className="flex items-center space-x-1 mb-2">
+                <label className="block text-sm font-medium text-gray-700">Insurance Status</label>
+                <div className="relative group">
+                  <button className="text-gray-400 hover:text-gray-600 cursor-help" type="button">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg w-64 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                    <div className="mb-1 font-medium">⚠️ User-Contributed Data</div>
+                    <div className="text-gray-200">
+                      This is crowd-sourced data. Always verify insurance coverage directly with the carrier.
+                    </div>
+                    {/* Arrow */}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
               </div>
+              <InsuranceStatus 
+                key={insuranceKey}
+                carrierId={carrier.id} 
+                showDetails={false}
+                onUpdateClick={handleInsuranceUpdate}
+              />
             </div>
             
             <div>
@@ -311,72 +339,41 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
         </div>
 
         {/* Insurance Information */}
-        {(carrier.insurance_expiry_date || carrier.insurance_carrier || carrier.insurance_policy_number || carrier.insurance_amount) && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Insurance Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {carrier.insurance_carrier && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Insurance Carrier</label>
-                  <p className="text-gray-900">{carrier.insurance_carrier}</p>
-                </div>
-              )}
-              
-              {carrier.insurance_policy_number && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Policy Number</label>
-                  <p className="text-gray-900 font-mono">{carrier.insurance_policy_number}</p>
-                </div>
-              )}
-              
-              {carrier.insurance_amount && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Coverage Amount</label>
-                  <p className="text-gray-900">${carrier.insurance_amount.toLocaleString()}</p>
-                </div>
-              )}
-              
-              {carrier.insurance_effective_date && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Effective Date</label>
-                  <p className="text-gray-900">{new Date(carrier.insurance_effective_date).toLocaleDateString()}</p>
-                </div>
-              )}
-              
-              {carrier.insurance_expiry_date && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-                  <div className="flex items-center gap-2">
-                    <p className="text-gray-900">{new Date(carrier.insurance_expiry_date).toLocaleDateString()}</p>
-                    {(() => {
-                      const expiryDate = new Date(carrier.insurance_expiry_date)
-                      const today = new Date()
-                      const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-                      
-                      if (daysUntilExpiry < 0) {
-                        return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded border border-red-200">EXPIRED</span>
-                      } else if (daysUntilExpiry <= 7) {
-                        return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded border border-red-200">Expires in {daysUntilExpiry} days</span>
-                      } else if (daysUntilExpiry <= 15) {
-                        return <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded border border-orange-200">Expires in {daysUntilExpiry} days</span>
-                      } else if (daysUntilExpiry <= 30) {
-                        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded border border-yellow-200">Expires in {daysUntilExpiry} days</span>
-                      }
-                      return null
-                    })()}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xl font-semibold text-gray-900">Insurance Information</h2>
+              <div className="relative group">
+                <button className="text-gray-400 hover:text-gray-600 cursor-help" type="button">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg w-72 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <div className="mb-1 font-medium">⚠️ User-Contributed Data</div>
+                  <div className="text-gray-200">
+                    This insurance information is crowd-sourced from users. Always verify insurance coverage directly with the carrier or their insurance provider before making business decisions.
                   </div>
+                  {/* Arrow */}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                 </div>
-              )}
-              
-              {carrier.insurance_last_verified && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Verified</label>
-                  <p className="text-gray-900">{new Date(carrier.insurance_last_verified).toLocaleDateString()}</p>
-                </div>
-              )}
+              </div>
             </div>
+            <button
+              onClick={handleInsuranceUpdate}
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 font-medium"
+            >
+              Update Insurance Info
+            </button>
           </div>
-        )}
+          <InsuranceStatus 
+            key={insuranceKey}
+            carrierId={carrier.id} 
+            showDetails={true}
+          />
+        </div>
 
         {/* Safety Rating History */}
         <SafetyRatingTrend carrierId={carrier.id} />
@@ -446,11 +443,13 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
                 {carrier.safety_rating}
               </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Insurance</span>
-              <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(carrier.insurance_status || 'Unknown')}`}>
-                {carrier.insurance_status || 'Unknown'}
-              </span>
+              <InsuranceStatus 
+                key={insuranceKey}
+                carrierId={carrier.id} 
+                showDetails={false}
+              />
             </div>
           </div>
         </div>
@@ -529,6 +528,16 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Insurance Update Form Modal */}
+      {showInsuranceForm && (
+        <InsuranceUpdateForm
+          carrierId={carrier.id}
+          carrierName={carrier.legal_name}
+          onClose={() => setShowInsuranceForm(false)}
+          onSuccess={handleInsuranceSuccess}
+        />
       )}
     </div>
   )

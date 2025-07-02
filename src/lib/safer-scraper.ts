@@ -56,12 +56,7 @@ interface ScrapedCarrierData {
   driver_inspections?: number
   vehicle_inspections?: number
   
-  // Insurance & Financial
-  insurance_carrier?: string
-  insurance_policy_number?: string
-  insurance_amount?: number
-  insurance_effective_date?: string
-  insurance_expiry_date?: string
+  // Insurance & Financial - REMOVED: Using crowd-sourced data instead
   cargo_insurance_amount?: number
   financial_responsibility_status?: string
   
@@ -585,31 +580,8 @@ export class SAFERScraper {
         data.out_of_service_rate = Math.round((data.out_of_service_orders / data.inspection_count) * 100)
       }
 
-      // Insurance Information
-      data.insurance_carrier = cleanText(extractTableValue('Insurance Carrier') || extractTableValue('Insurance Company'))
-      data.insurance_policy_number = cleanText(extractTableValue('Policy Number') || extractTableValue('Insurance Policy'))
-      
-      const insuranceAmount = extractTableValue('Insurance Amount') || extractTableValue('Liability Insurance')
-      if (insuranceAmount) {
-        const amountText = cleanText(insuranceAmount)
-        const amountMatch = amountText?.match(/\$?([\d,]+)/)
-        if (amountMatch) {
-          data.insurance_amount = parseInt(amountMatch[1].replace(/,/g, ''))
-        }
-      }
-
-      const cargoInsurance = extractTableValue('Cargo Insurance') || extractTableValue('Cargo Coverage')
-      if (cargoInsurance) {
-        const cargoText = cleanText(cargoInsurance)
-        const cargoMatch = cargoText?.match(/\$?([\d,]+)/)
-        if (cargoMatch) {
-          data.cargo_insurance_amount = parseInt(cargoMatch[1].replace(/,/g, ''))
-        }
-      }
-
-      // Insurance Dates
-      data.insurance_effective_date = cleanText(extractTableValue('Insurance Effective Date'))
-      data.insurance_expiry_date = cleanText(extractTableValue('Insurance Expiry Date') || extractTableValue('Insurance Expiration'))
+      // Insurance Information - REMOVED: Using crowd-sourced data instead
+      // Insurance data is now collected through user submissions in carrier_insurance_info table
 
       // Financial Responsibility
       data.financial_responsibility_status = cleanText(extractTableValue('Financial Responsibility') || extractTableValue('Financial Status'))
@@ -804,11 +776,7 @@ export class SAFERScraper {
         out_of_service_rate: data.out_of_service_rate,
         driver_inspections: data.driver_inspections,
         vehicle_inspections: data.vehicle_inspections,
-        insurance_carrier: data.insurance_carrier,
-        insurance_policy_number: data.insurance_policy_number,
-        insurance_amount: data.insurance_amount,
-        insurance_effective_date: data.insurance_effective_date,
-        insurance_expiry_date: data.insurance_expiry_date,
+        // Insurance fields removed - using crowd-sourced data instead
         cargo_insurance_amount: data.cargo_insurance_amount,
         financial_responsibility_status: data.financial_responsibility_status,
         equipment_types: data.equipment_types,
