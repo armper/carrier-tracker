@@ -9,6 +9,7 @@ interface CommentData {
   user_id: string
   user_email: string
   user_reputation: number
+  user_type: string
   parent_comment_id: string | null
   reply_count: number
   upvotes: number
@@ -123,6 +124,36 @@ export default function Comment({
     return { text: 'New', color: 'bg-gray-100 text-gray-800' }
   }
 
+  const getUserTypeBadge = (userType: string) => {
+    switch (userType) {
+      case 'driver':
+        return { 
+          text: 'Driver', 
+          color: 'bg-blue-100 text-blue-800 border border-blue-200',
+          icon: '🚛' // Truck icon for drivers
+        }
+      case 'carrier':
+        return { 
+          text: 'Carrier', 
+          color: 'bg-green-100 text-green-800 border border-green-200',
+          icon: '🏢' // Building icon for carriers
+        }
+      case 'broker':
+        return { 
+          text: 'Broker', 
+          color: 'bg-purple-100 text-purple-800 border border-purple-200',
+          icon: '🤝' // Handshake icon for brokers
+        }
+      case 'other':
+      default:
+        return { 
+          text: 'Member', 
+          color: 'bg-gray-100 text-gray-800 border border-gray-200',
+          icon: '👤' // User icon for others
+        }
+    }
+  }
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     const now = new Date()
@@ -141,6 +172,7 @@ export default function Comment({
   }
 
   const badge = getReputationBadge(comment.user_reputation)
+  const userTypeBadge = getUserTypeBadge(comment.user_type)
   const netScore = localUpvotes - localDownvotes
 
   return (
@@ -172,6 +204,10 @@ export default function Comment({
               {comment.is_author && (
                 <span className="ml-1 text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded">You</span>
               )}
+            </span>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${userTypeBadge.color} flex items-center gap-1`}>
+              <span>{userTypeBadge.icon}</span>
+              <span>{userTypeBadge.text}</span>
             </span>
             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${badge.color}`}>
               {badge.text}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import UserReputation from './UserReputation'
 
 interface InsuranceUpdateFormProps {
   carrierId: string
@@ -20,6 +21,8 @@ export default function InsuranceUpdateForm({ carrierId, carrierName, onClose, o
     source_type: 'user_submitted',
     notes: ''
   })
+  const [documentFile, setDocumentFile] = useState<File | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -31,6 +34,31 @@ export default function InsuranceUpdateForm({ carrierId, carrierName, onClose, o
     try {
       const supabase = createClient()
       
+      let documentData = null
+      
+      // Upload document if provided
+      if (documentFile) {
+        setUploadProgress(25)
+        const uploadFormData = new FormData()
+        uploadFormData.append('document', documentFile)
+        
+        const uploadResponse = await fetch('/api/upload/insurance-document', {
+          method: 'POST',
+          body: uploadFormData
+        })
+        
+        setUploadProgress(50)
+        
+        if (!uploadResponse.ok) {
+          const uploadError = await uploadResponse.json()
+          throw new Error(uploadError.error || 'Failed to upload document')
+        }
+        
+        const uploadResult = await uploadResponse.json()
+        documentData = uploadResult.data
+        setUploadProgress(75)
+      }
+      
       // Call the submit_insurance_info function
       const { data, error: submitError } = await supabase.rpc('submit_insurance_info', {
         p_carrier_id: carrierId,
@@ -39,14 +67,35 @@ export default function InsuranceUpdateForm({ carrierId, carrierName, onClose, o
         p_insurance_amount: formData.insurance_amount ? parseFloat(formData.insurance_amount) : null,
         p_effective_date: formData.effective_date || null,
         p_expiry_date: formData.expiry_date || null,
-        p_source_type: formData.source_type,
-        p_notes: formData.notes || null
+        p_source_type: documentFile ? 'document_upload' : formData.source_type,
+        p_notes: formData.notes || null,
+        p_document_url: documentData?.url || null,
+        p_document_filename: documentData?.filename || null,
+        p_document_file_size: documentData?.size || null,
+        p_document_mime_type: documentData?.mimeType || null
       })
 
       if (submitError) {
         throw submitError
       }
 
+      setUploadProgress(100)
+      
+      // Trigger insurance update notifications
+      try {
+        await fetch('/api/notifications/insurance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            carrierId,
+            notificationType: 'insurance_updated'
+          })
+        })
+      } catch (notificationError) {
+        console.warn('Failed to send notifications:', notificationError)
+        // Don't fail the submission if notifications fail
+      }
+      
       onSuccess()
       onClose()
     } catch (error: any) {
@@ -54,6 +103,7 @@ export default function InsuranceUpdateForm({ carrierId, carrierName, onClose, o
       setError(error.message || 'Failed to submit insurance information')
     } finally {
       setLoading(false)
+      setUploadProgress(0)
     }
   }
 
@@ -63,6 +113,42 @@ export default function InsuranceUpdateForm({ carrierId, carrierName, onClose, o
       ...prev,
       [name]: value
     }))
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
+      if (!allowedTypes.includes(file.type)) {
+        setError('Invalid file type. Only images (JPEG, PNG, WebP) and PDF files are allowed.')
+        return
+      }
+      
+      // Validate file size (5MB max)
+      const maxSize = 5 * 1024 * 1024
+      if (file.size > maxSize) {
+        setError('File too large. Maximum size is 5MB.')
+        return
+      }
+      
+      setDocumentFile(file)
+      setError('') // Clear any previous errors
+    }
+  }
+
+  const removeFile = () => {
+    setDocumentFile(null)
+    const fileInput = document.getElementById('document-upload') as HTMLInputElement
+    if (fileInput) fileInput.value = ''
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
   return (
@@ -91,6 +177,11 @@ export default function InsuranceUpdateForm({ carrierId, carrierName, onClose, o
               Help keep carrier information up-to-date by submitting insurance details. 
               Your submission will be verified by the community.
             </p>
+          </div>
+
+          {/* User Reputation Display */}
+          <div className="mb-4">
+            <UserReputation showDetails={false} inline={true} />
           </div>
 
           <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
@@ -208,6 +299,78 @@ export default function InsuranceUpdateForm({ carrierId, carrierName, onClose, o
                 <option value="carrier_confirmed">Carrier Confirmed</option>
                 <option value="third_party">Third Party Source</option>
               </select>
+            </div>
+
+            {/* Document Upload Section */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Upload Document (Optional)
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Upload insurance certificate, policy document, or screenshot. Images and PDFs only, max 5MB.
+              </p>
+              
+              {!documentFile ? (
+                <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center hover:border-gray-400 transition-colors">
+                  <svg className="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <label htmlFor="document-upload" className="cursor-pointer">
+                    <span className="text-blue-600 hover:text-blue-500 font-medium">Click to upload</span>
+                    <span className="text-gray-500"> or drag and drop</span>
+                  </label>
+                  <input
+                    id="document-upload"
+                    type="file"
+                    className="hidden"
+                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                    onChange={handleFileChange}
+                  />
+                </div>
+              ) : (
+                <div className="border border-gray-300 rounded-md p-3 bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <svg className="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{documentFile.name}</p>
+                        <p className="text-xs text-gray-500">{formatFileSize(documentFile.size)}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeFile}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  {uploadProgress > 0 && uploadProgress < 100 && (
+                    <div className="mt-2">
+                      <div className="bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Uploading... {uploadProgress}%</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {documentFile && (
+                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-xs text-green-800">
+                    📄 Document upload will increase your submission confidence score and help verify accuracy.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>

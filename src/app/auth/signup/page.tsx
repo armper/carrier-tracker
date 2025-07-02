@@ -10,6 +10,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [companyName, setCompanyName] = useState('')
+  const [userType, setUserType] = useState('other')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -30,6 +31,7 @@ export default function SignupPage() {
         data: {
           full_name: fullName,
           company_name: companyName,
+          user_type: userType,
         }
       }
     })
@@ -86,6 +88,26 @@ export default function SignupPage() {
                   onChange={(e) => setFullName(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="userType" className="block text-sm font-medium text-gray-700">
+                I am a
+              </label>
+              <div className="mt-1">
+                <select
+                  id="userType"
+                  name="userType"
+                  value={userType}
+                  onChange={(e) => setUserType(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="driver">Driver</option>
+                  <option value="carrier">Carrier</option>
+                  <option value="broker">Freight Broker</option>
+                  <option value="other">Other</option>
+                </select>
               </div>
             </div>
 

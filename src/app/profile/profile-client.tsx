@@ -22,6 +22,7 @@ interface Profile {
   updated_at: string
   is_admin: boolean
   role: string
+  user_type: string
 }
 
 interface Props {
@@ -36,7 +37,8 @@ export default function ProfileClient({ user, profile }: Props) {
   const [profileForm, setProfileForm] = useState({
     name: profile?.full_name || user.user_metadata?.name || '',
     company: profile?.company_name || user.user_metadata?.company || '',
-    email: user.email || ''
+    email: user.email || '',
+    user_type: profile?.user_type || 'other'
   })
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -53,6 +55,21 @@ export default function ProfileClient({ user, profile }: Props) {
   const supabase = createClient()
   const { addNotification } = useNotifications()
 
+  const getUserTypeDisplay = (userType: string) => {
+    switch (userType) {
+      case 'driver':
+        return 'Driver'
+      case 'carrier':
+        return 'Carrier'
+      case 'broker':
+        return 'Freight Broker'
+      case 'other':
+        return 'Other'
+      default:
+        return 'Other'
+    }
+  }
+
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -66,6 +83,7 @@ export default function ProfileClient({ user, profile }: Props) {
           email: user.email!,
           full_name: profileForm.name.trim() || null,
           company_name: profileForm.company.trim() || null,
+          user_type: profileForm.user_type,
           updated_at: new Date().toISOString()
         })
 
@@ -203,16 +221,31 @@ export default function ProfileClient({ user, profile }: Props) {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Company
+                      User Type
                     </label>
-                    <input
-                      type="text"
-                      value={profileForm.company}
-                      onChange={(e) => setProfileForm({ ...profileForm, company: e.target.value })}
+                    <select
+                      value={profileForm.user_type}
+                      onChange={(e) => setProfileForm({ ...profileForm, user_type: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Enter your company name"
-                    />
+                    >
+                      <option value="driver">Driver</option>
+                      <option value="carrier">Carrier</option>
+                      <option value="broker">Freight Broker</option>
+                      <option value="other">Other</option>
+                    </select>
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Company
+                  </label>
+                  <input
+                    type="text"
+                    value={profileForm.company}
+                    onChange={(e) => setProfileForm({ ...profileForm, company: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your company name"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -241,7 +274,8 @@ export default function ProfileClient({ user, profile }: Props) {
                       setProfileForm({
                         name: profile?.full_name || user.user_metadata?.name || '',
                         company: profile?.company_name || user.user_metadata?.company || '',
-                        email: user.email || ''
+                        email: user.email || '',
+                        user_type: profile?.user_type || 'other'
                       })
                     }}
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
@@ -261,10 +295,16 @@ export default function ProfileClient({ user, profile }: Props) {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Company
+                      User Type
                     </label>
-                    <p className="text-gray-900">{profileForm.company || 'Not provided'}</p>
+                    <p className="text-gray-900">{getUserTypeDisplay(profileForm.user_type)}</p>
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Company
+                  </label>
+                  <p className="text-gray-900">{profileForm.company || 'Not provided'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">

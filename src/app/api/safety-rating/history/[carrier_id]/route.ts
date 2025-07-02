@@ -17,30 +17,10 @@ export async function GET(
     
     const supabase = await createClient()
 
-    // Verify user has access to this carrier (either admin or has carrier saved)
+    // Verify user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Check if user is admin or has carrier saved
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile?.is_admin) {
-      const { data: savedCarrier } = await supabase
-        .from('saved_carriers')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('carrier_id', carrier_id)
-        .single()
-
-      if (!savedCarrier) {
-        return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-      }
     }
 
     // Get carrier basic info

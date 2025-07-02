@@ -313,34 +313,36 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
               </div>
             </div>
             
-            <div>
-              <div className="flex items-center space-x-1 mb-2">
-                <label className="block text-sm font-medium text-gray-700">Insurance Status</label>
-                <div className="relative group">
-                  <button className="text-gray-400 hover:text-gray-600 cursor-help" type="button">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                  
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg w-64 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                    <div className="mb-1 font-medium">⚠️ User-Contributed Data</div>
-                    <div className="text-gray-200">
-                      This is crowd-sourced data. Always verify insurance coverage directly with the carrier.
+            {carrier.entity_type === 'CARRIER' && (
+              <div>
+                <div className="flex items-center space-x-1 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Insurance Status</label>
+                  <div className="relative group">
+                    <button className="text-gray-400 hover:text-gray-600 cursor-help" type="button">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg w-64 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                      <div className="mb-1 font-medium">⚠️ User-Contributed Data</div>
+                      <div className="text-gray-200">
+                        This is crowd-sourced data. Always verify insurance coverage directly with the carrier.
+                      </div>
+                      {/* Arrow */}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                     </div>
-                    {/* Arrow */}
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                   </div>
                 </div>
+                <InsuranceStatus 
+                  key={insuranceKey}
+                  carrierId={carrier.id} 
+                  showDetails={false}
+                  onUpdateClick={handleInsuranceUpdate}
+                />
               </div>
-              <InsuranceStatus 
-                key={insuranceKey}
-                carrierId={carrier.id} 
-                showDetails={false}
-                onUpdateClick={handleInsuranceUpdate}
-              />
-            </div>
+            )}
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Authority Status</label>
@@ -351,45 +353,47 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
           </div>
         </div>
 
-        {/* Insurance Information */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
-              <h2 className="text-xl font-semibold text-gray-900">Insurance Information</h2>
-              <div className="relative group">
-                <button className="text-gray-400 hover:text-gray-600 cursor-help" type="button">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                  </svg>
-                </button>
-                
-                {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg w-72 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                  <div className="mb-1 font-medium">⚠️ User-Contributed Data</div>
-                  <div className="text-gray-200">
-                    This insurance information is crowd-sourced from users. Always verify insurance coverage directly with the carrier or their insurance provider before making business decisions.
+        {/* Insurance Information - Only for carriers */}
+        {carrier.entity_type === 'CARRIER' && (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <h2 className="text-xl font-semibold text-gray-900">Insurance Information</h2>
+                <div className="relative group">
+                  <button className="text-gray-400 hover:text-gray-600 cursor-help" type="button">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg w-72 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                    <div className="mb-1 font-medium">⚠️ User-Contributed Data</div>
+                    <div className="text-gray-200">
+                      This insurance information is crowd-sourced from users. Always verify insurance coverage directly with the carrier or their insurance provider before making business decisions.
+                    </div>
+                    {/* Arrow */}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                   </div>
-                  {/* Arrow */}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                 </div>
               </div>
+              <button
+                onClick={handleInsuranceUpdate}
+                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 font-medium"
+              >
+                Update Insurance Info
+              </button>
             </div>
-            <button
-              onClick={handleInsuranceUpdate}
-              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 font-medium"
-            >
-              Update Insurance Info
-            </button>
+            <InsuranceStatus 
+              key={insuranceKey}
+              carrierId={carrier.id} 
+              showDetails={true}
+            />
           </div>
-          <InsuranceStatus 
-            key={insuranceKey}
-            carrierId={carrier.id} 
-            showDetails={true}
-          />
-        </div>
+        )}
 
         {/* Rate Per Mile Information - Only for carriers */}
-        {(!carrier.entity_type || carrier.entity_type === 'CARRIER') && (
+        {carrier.entity_type === 'CARRIER' && (
           <RateDisplay 
             key={rateKey}
             carrierId={carrier.id}
@@ -466,14 +470,16 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
                 {carrier.safety_rating}
               </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Insurance</span>
-              <InsuranceStatus 
-                key={insuranceKey}
-                carrierId={carrier.id} 
-                showDetails={false}
-              />
-            </div>
+            {carrier.entity_type === 'CARRIER' && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Insurance</span>
+                <InsuranceStatus 
+                  key={insuranceKey}
+                  carrierId={carrier.id} 
+                  showDetails={false}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -553,8 +559,8 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
         </div>
       )}
       
-      {/* Insurance Update Form Modal */}
-      {showInsuranceForm && (
+      {/* Insurance Update Form Modal - Only for carriers */}
+      {showInsuranceForm && carrier.entity_type === 'CARRIER' && (
         <InsuranceUpdateForm
           carrierId={carrier.id}
           carrierName={carrier.legal_name}
@@ -564,7 +570,7 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
       )}
 
       {/* Rate Submission Form Modal - Only for carriers */}
-      {showRateForm && (!carrier.entity_type || carrier.entity_type === 'CARRIER') && (
+      {showRateForm && carrier.entity_type === 'CARRIER' && (
         <RateSubmissionForm
           carrierId={carrier.id}
           carrierName={carrier.legal_name}
