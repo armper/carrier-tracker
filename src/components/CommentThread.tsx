@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import Comment from './Comment'
 
-type CommentType = 'rate_submission' | 'insurance_info' | 'carrier_general' | 'safety_concern'
+type CommentType = 'rate_submission' | 'insurance_info' | 'carrier_general' | 'safety_concern' | 'carrier_rating'
 
 interface CommentData {
   id: string
@@ -12,6 +12,7 @@ interface CommentData {
   user_id: string
   user_email: string
   user_reputation: number
+  user_type: string
   parent_comment_id: string | null
   reply_count: number
   upvotes: number

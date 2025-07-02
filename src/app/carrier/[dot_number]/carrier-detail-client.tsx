@@ -7,6 +7,7 @@ import InsuranceStatus from '@/components/InsuranceStatus'
 import InsuranceUpdateForm from '@/components/InsuranceUpdateForm'
 import RateDisplay from '@/components/RateDisplay'
 import RateSubmissionForm from '@/components/RateSubmissionForm'
+import CarrierRatings from '@/components/CarrierRatings'
 
 interface Carrier {
   id: string
@@ -404,6 +405,12 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
 
         {/* Safety Rating History */}
         <SafetyRatingTrend carrierId={carrier.id} />
+
+        {/* Carrier Ratings & Reviews */}
+        <CarrierRatings 
+          carrierId={carrier.id}
+          carrierName={carrier.legal_name}
+        />
       </div>
 
       {/* Sidebar */}
