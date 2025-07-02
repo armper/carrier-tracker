@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase'
 import SafetyRatingTrend from '@/components/SafetyRatingTrend'
 import InsuranceStatus from '@/components/InsuranceStatus'
 import InsuranceUpdateForm from '@/components/InsuranceUpdateForm'
+import RateDisplay from '@/components/RateDisplay'
+import RateSubmissionForm from '@/components/RateSubmissionForm'
 
 interface Carrier {
   id: string
@@ -31,6 +33,7 @@ interface CarrierDetailClientProps {
 }
 
 export default function CarrierDetailClient({ carrier }: CarrierDetailClientProps) {
+  console.log('CarrierDetailClient received carrier:', carrier)
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
   const [isSaved, setIsSaved] = useState(false)
@@ -44,6 +47,8 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
   const [reportMessage, setReportMessage] = useState('')
   const [showInsuranceForm, setShowInsuranceForm] = useState(false)
   const [insuranceKey, setInsuranceKey] = useState(0)
+  const [showRateForm, setShowRateForm] = useState(false)
+  const [rateKey, setRateKey] = useState(0)
   const supabase = createClient()
 
   // Check if carrier is already saved
@@ -222,6 +227,14 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
     setInsuranceKey(prev => prev + 1)
   }
 
+  const handleRateSubmission = () => {
+    setShowRateForm(true)
+  }
+
+  const handleRateSuccess = () => {
+    setRateKey(prev => prev + 1)
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Main Content */}
@@ -374,6 +387,16 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
             showDetails={true}
           />
         </div>
+
+        {/* Rate Per Mile Information - Only for carriers */}
+        {(!carrier.entity_type || carrier.entity_type === 'CARRIER') && (
+          <RateDisplay 
+            key={rateKey}
+            carrierId={carrier.id}
+            carrierName={carrier.legal_name}
+            onSubmitRate={handleRateSubmission}
+          />
+        )}
 
         {/* Safety Rating History */}
         <SafetyRatingTrend carrierId={carrier.id} />
@@ -537,6 +560,16 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
           carrierName={carrier.legal_name}
           onClose={() => setShowInsuranceForm(false)}
           onSuccess={handleInsuranceSuccess}
+        />
+      )}
+
+      {/* Rate Submission Form Modal - Only for carriers */}
+      {showRateForm && (!carrier.entity_type || carrier.entity_type === 'CARRIER') && (
+        <RateSubmissionForm
+          carrierId={carrier.id}
+          carrierName={carrier.legal_name}
+          onClose={() => setShowRateForm(false)}
+          onSuccess={handleRateSuccess}
         />
       )}
     </div>
