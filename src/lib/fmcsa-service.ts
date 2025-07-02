@@ -189,9 +189,30 @@ export class FMCSAService {
           .trim()
       }
 
-      // Helper function to extract table values using DOM selectors
+      // Helper function to extract table values using DOM selectors - improved for SAFER HTML structure
       const extractTableValue = (label: string): string | null => {
-        // Look for table rows containing the label
+        // SAFER HTML uses specific structure: <TH class="querylabelbkg">Label:</TH> followed by <TD class="queryfield">Data</TD>
+        
+        // Approach 1: Look for the specific SAFER structure
+        const labelTh = $('th.querylabelbkg').filter((i, el) => {
+          const text = $(el).text().trim()
+          return text === label + ':' || text === label || text.includes(label)
+        })
+        
+        if (labelTh.length > 0) {
+          // Find the data cell in the same row with class "queryfield"
+          const row = labelTh.closest('tr')
+          const dataCell = row.find('td.queryfield').first()
+          if (dataCell.length > 0) {
+            const text = dataCell.text().trim()
+            // Clean the text and validate it's not form interface
+            if (text && !text.includes('Query Result') && !text.includes('SAFER Table Layout') && !text.includes('Enter Value')) {
+              return text
+            }
+          }
+        }
+        
+        // Approach 2: Fallback to original logic with better filtering
         const row = $(`th:contains("${label}"), td:contains("${label}")`).closest('tr')
         if (row.length === 0) return null
 
@@ -201,6 +222,19 @@ export class FMCSAService {
 
         // Extract text content, handling nested tags
         const text = dataCell.text().trim()
+        
+        // Filter out garbage form interface text
+        if (!text || 
+            text.includes('Query Result') ||
+            text.includes('SAFER Table Layout') ||
+            text.includes('Enter Value') ||
+            text.includes('Information') ||
+            text.includes('USDOT Number') ||
+            text.includes('MC/MX Number') ||
+            text.length > 200) {
+          return null
+        }
+        
         return text || null
       }
 

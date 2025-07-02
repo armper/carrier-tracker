@@ -223,12 +223,31 @@ var SAFERScraper = /** @class */ (function () {
                     .replace(/&gt;/g, '>')
                     .trim();
             };
-            // Helper function to extract table values using DOM selectors
+            // Helper function to extract table values using DOM selectors - improved for SAFER HTML structure
             var extractTableValue = function (label) {
-                // Try multiple approaches to find the data
-                // Approach 1: Look for table rows containing the label
+                // SAFER HTML uses specific structure: <TH class="querylabelbkg">Label:</TH> followed by <TD class="queryfield">Data</TD>
+                
+                // Approach 1: Look for the specific SAFER structure
+                var labelTh = $_1('th.querylabelbkg').filter(function(i, el) {
+                    var text = $_1(el).text().trim();
+                    return text === label + ':' || text === label || text.includes(label);
+                });
+                
+                if (labelTh.length > 0) {
+                    // Find the data cell in the same row with class "queryfield"
+                    var row = labelTh.closest('tr');
+                    var dataCell = row.find('td.queryfield').first();
+                    if (dataCell.length > 0) {
+                        var text = dataCell.text().trim();
+                        // Clean the text and validate it's not form interface
+                        if (text && !text.includes('Query Result') && !text.includes('SAFER Table Layout') && !text.includes('Enter Value')) {
+                            return text;
+                        }
+                    }
+                }
+                
+                // Approach 2: Fallback to original logic but with better filtering
                 var row = $_1("th:contains(\"".concat(label, "\"), td:contains(\"").concat(label, "\")")).closest('tr');
-                // Approach 2: If not found, try looking for the label in any element
                 if (row.length === 0) {
                     var labelElement = $_1("*:contains(\"".concat(label, "\")")).filter(function (i, el) {
                         var text = $_1(el).text().trim();
@@ -240,6 +259,7 @@ var SAFERScraper = /** @class */ (function () {
                 }
                 if (row.length === 0)
                     return null;
+                
                 // Get the corresponding data cell - try different strategies
                 var dataCell = row.find('td').not(':contains("' + label + '")').first();
                 // If no data cell found, try the next sibling
@@ -268,14 +288,21 @@ var SAFERScraper = /** @class */ (function () {
                     .replace(/^\s+|\s+$/g, '') // Trim
                     .replace(/^[:\s]+/, '') // Remove leading colons/spaces
                     .replace(/[:\s]+$/, '') // Remove trailing colons/spaces
-                    .replace(/^Query Result.*$/gm, '') // Remove "Query Result" text
-                    .replace(/^Information.*$/gm, '') // Remove "Information" text
-                    .replace(/^USDOT Number.*$/gm, '') // Remove "USDOT Number" text
-                    .replace(/^MC\/MX Number.*$/gm, '') // Remove "MC/MX Number" text
-                    .replace(/^Name.*$/gm, '') // Remove "Name" text
-                    .replace(/^SAFER Table Layout.*$/gm, '') // Remove "SAFER Table Layout" text
-                    .replace(/^Enter Value:.*$/gm, '') // Remove "Enter Value:" text
+                    .replace(/Query Result/gi, '') // Remove "Query Result" text
+                    .replace(/Information/g, '') // Remove "Information" text  
+                    .replace(/USDOT Number/gi, '') // Remove "USDOT Number" text
+                    .replace(/MC\/MX Number/gi, '') // Remove "MC/MX Number" text
+                    .replace(/Name/g, '') // Remove standalone "Name" text
+                    .replace(/SAFER Table Layout/gi, '') // Remove "SAFER Table Layout" text
+                    .replace(/Enter Value:?/gi, '') // Remove "Enter Value:" text
+                    .replace(/&nbsp;/g, ' ') // Remove non-breaking spaces
                     .trim();
+                
+                // If the result is empty or just form interface elements, return null
+                if (!text || text.length === 0 || 
+                    text.match(/^(Query Result|Information|USDOT Number|MC\/MX Number|Name|SAFER Table Layout|Enter Value)$/i)) {
+                    return null;
+                }
                 // If the text is still too long or contains HTML artifacts, try a more aggressive approach
                 if (text.length > 200 || text.includes('Query Result') || text.includes('SAFER Table Layout')) {
                     // Try to find the actual data by looking for the first meaningful text
