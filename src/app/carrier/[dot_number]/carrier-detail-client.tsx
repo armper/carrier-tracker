@@ -336,11 +336,11 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
                     </div>
                   </div>
                 </div>
-                <InsuranceStatus 
-                  key={insuranceKey}
+                <InsuranceStatusWithVoting 
                   carrierId={carrier.id} 
                   showDetails={false}
-                  onUpdateClick={handleInsuranceUpdate}
+                  onUpdateClick={handleInsuranceLookup}
+                  refreshTrigger={insuranceKey}
                 />
               </div>
             )}
