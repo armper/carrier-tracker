@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import Link from 'next/link'
-import CarrierDetailClient from './carrier-detail-client'
+import CarrierDetailClientSocial from './carrier-detail-client-social'
 
 interface PageProps {
   params: Promise<{
@@ -55,18 +55,19 @@ export default async function CarrierDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
+    <div>
+      {/* Simple Navigation Bar */}
+      <header className="bg-white shadow-sm relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <Link href="/" className="text-2xl font-bold text-gray-900">
+          <div className="flex justify-between items-center py-4">
+            <Link href="/" className="text-xl font-bold text-gray-900">
               CarrierTracker
             </Link>
             <div className="flex gap-4">
-              <Link href="/search" className="px-4 py-2 text-blue-600 hover:text-blue-800">
+              <Link href="/search" className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600 transition-colors">
                 Search
               </Link>
-              <Link href="/dashboard" className="px-4 py-2 text-blue-600 hover:text-blue-800">
+              <Link href="/dashboard" className="px-3 py-2 text-sm text-gray-600 hover:text-blue-600 transition-colors">
                 Dashboard
               </Link>
             </div>
@@ -74,97 +75,8 @@ export default async function CarrierDetailPage({ params }: PageProps) {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex mb-8" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
-            <li className="inline-flex items-center">
-              <Link href="/" className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
-                Home
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <svg className="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 9 4-4-4-4"/>
-                </svg>
-                <Link href="/search" className="text-sm font-medium text-gray-700 hover:text-blue-600 ms-1 md:ms-2">
-                  Search
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <svg className="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 9 4-4-4-4"/>
-                </svg>
-                <span className="text-sm font-medium text-gray-500 ms-1 md:ms-2">DOT {dot_number}</span>
-              </div>
-            </li>
-          </ol>
-        </nav>
-
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{carrier.legal_name}</h1>
-              {carrier.dba_name && (
-                <p className="text-lg text-gray-600">DBA: {carrier.dba_name}</p>
-              )}
-              <p className="text-gray-600">DOT Number: {carrier.dot_number}</p>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              {/* Data Source Badge */}
-              <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
-                carrier.data_source === 'fmcsa' || carrier.data_source === 'safer_scraper'
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-blue-100 text-blue-800'
-              }`}>
-                {carrier.data_source === 'fmcsa' ? '🏛️ FMCSA Data' : 
-                 carrier.data_source === 'safer_scraper' ? '🤖 SAFER Scraper' :
-                 '📝 Manual Entry'}
-              </span>
-              
-              {/* Trust Score */}
-              {carrier.trust_score && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Trust Score:</span>
-                  <div className="flex items-center gap-1">
-                    <span className={`text-sm font-semibold ${
-                      carrier.trust_score >= 90 ? 'text-green-600' :
-                      carrier.trust_score >= 70 ? 'text-yellow-600' :
-                      'text-red-600'
-                    }`}>
-                      {carrier.trust_score}%
-                    </span>
-                    <div className="w-12 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${
-                          carrier.trust_score >= 90 ? 'bg-green-600' :
-                          carrier.trust_score >= 70 ? 'bg-yellow-600' :
-                          'bg-red-600'
-                        }`}
-                        style={{ width: `${carrier.trust_score}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Data Freshness */}
-              {carrier.updated_at && (
-                <p className="text-xs text-gray-500">
-                  Updated {new Date(carrier.updated_at).toLocaleDateString()}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Carrier Detail Content */}
-        <CarrierDetailClient carrier={carrier} />
-      </main>
+      {/* Social Carrier Detail Component */}
+      <CarrierDetailClientSocial carrier={carrier} />
     </div>
   )
 }
