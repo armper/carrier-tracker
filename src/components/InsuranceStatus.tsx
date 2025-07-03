@@ -22,9 +22,10 @@ interface InsuranceStatusProps {
   carrierId: string
   showDetails?: boolean
   onUpdateClick?: () => void
+  refreshTrigger?: number // Add a trigger to force refresh
 }
 
-export default function InsuranceStatus({ carrierId, showDetails = false, onUpdateClick }: InsuranceStatusProps) {
+export default function InsuranceStatus({ carrierId, showDetails = false, onUpdateClick, refreshTrigger }: InsuranceStatusProps) {
   const [insuranceData, setInsuranceData] = useState<InsuranceStatusData | null>(null)
   const [loading, setLoading] = useState(true)
   const [showTooltip, setShowTooltip] = useState(false)
@@ -32,6 +33,21 @@ export default function InsuranceStatus({ carrierId, showDetails = false, onUpda
   useEffect(() => {
     fetchInsuranceStatus()
   }, [carrierId])
+
+  // Effect to handle refresh trigger
+  useEffect(() => {
+    if (refreshTrigger) {
+      refreshInsuranceStatus()
+    }
+  }, [refreshTrigger])
+
+  // Add a method to manually refresh insurance status
+  const refreshInsuranceStatus = async () => {
+    setLoading(true)
+    // Add a small delay to account for potential database replication lag
+    await new Promise(resolve => setTimeout(resolve, 500))
+    await fetchInsuranceStatus()
+  }
 
   const fetchInsuranceStatus = async () => {
     try {

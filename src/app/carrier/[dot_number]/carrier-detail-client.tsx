@@ -386,9 +386,9 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
               </button>
             </div>
             <InsuranceStatus 
-              key={insuranceKey}
               carrierId={carrier.id} 
               showDetails={true}
+              refreshTrigger={insuranceKey}
             />
           </div>
         )}
@@ -481,9 +481,9 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Insurance</span>
                 <InsuranceStatus 
-                  key={insuranceKey}
                   carrierId={carrier.id} 
                   showDetails={false}
+                  refreshTrigger={insuranceKey}
                 />
               </div>
             )}
