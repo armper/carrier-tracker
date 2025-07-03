@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import InsuranceStatus from './InsuranceStatus'
-import InsuranceUpdateForm from './InsuranceUpdateForm'
+import InsuranceStatusWithVoting from './InsuranceStatusWithVoting'
+import InsuranceLookupGuide from './InsuranceLookupGuide'
 
 interface Carrier {
   id: string
@@ -37,7 +37,7 @@ interface CarrierCardProps {
 }
 
 export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton = true, isSaved = false }: CarrierCardProps) {
-  const [showInsuranceForm, setShowInsuranceForm] = useState(false)
+  const [showInsuranceLookup, setShowInsuranceLookup] = useState(false)
   const [insuranceKey, setInsuranceKey] = useState(0) // For forcing refresh
   const getSafetyRatingColor = (rating: string | null) => {
     if (!rating) return 'bg-gray-100 text-gray-800'
@@ -55,7 +55,7 @@ export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton 
   }
 
   const handleInsuranceUpdate = () => {
-    setShowInsuranceForm(true)
+    setShowInsuranceLookup(true)
   }
 
   const handleInsuranceSuccess = () => {
@@ -152,11 +152,11 @@ export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton 
           
           <div>
             <span className="text-sm text-gray-600 block mb-1">Insurance</span>
-            <InsuranceStatus 
-              key={insuranceKey}
+            <InsuranceStatusWithVoting 
               carrierId={carrier.id} 
               showDetails={false}
               onUpdateClick={handleInsuranceUpdate}
+              refreshTrigger={insuranceKey}
             />
           </div>
           
@@ -193,12 +193,14 @@ export default function CarrierCard({ carrier, onSave, isSaving, showSaveButton 
         </div>
       )}
       
-      {/* Insurance Update Form Modal */}
-      {showInsuranceForm && (
-        <InsuranceUpdateForm
+      {/* Insurance Lookup Guide Modal */}
+      {showInsuranceLookup && (
+        <InsuranceLookupGuide
           carrierId={carrier.id}
           carrierName={carrier.legal_name}
-          onClose={() => setShowInsuranceForm(false)}
+          dotNumber={carrier.dot_number}
+          mcNumber={carrier.mc_number}
+          onClose={() => setShowInsuranceLookup(false)}
           onSuccess={handleInsuranceSuccess}
         />
       )}

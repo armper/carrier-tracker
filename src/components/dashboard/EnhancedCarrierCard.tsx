@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import InsuranceStatus from '../InsuranceStatus'
-import InsuranceUpdateForm from '../InsuranceUpdateForm'
+import InsuranceStatusWithVoting from '../InsuranceStatusWithVoting'
+import InsuranceLookupGuide from '../InsuranceLookupGuide'
 
 interface Carrier {
   id: string
@@ -58,7 +58,7 @@ export default function EnhancedCarrierCard({
   const [isHovered, setIsHovered] = useState(false)
   const [quickEditMode, setQuickEditMode] = useState<string | null>(null)
   const [quickNote, setQuickNote] = useState(savedCarrier.notes || '')
-  const [showInsuranceForm, setShowInsuranceForm] = useState(false)
+  const [showInsuranceLookup, setShowInsuranceLookup] = useState(false)
   const [insuranceKey, setInsuranceKey] = useState(0)
   
   const carrier = savedCarrier.carriers
@@ -127,7 +127,7 @@ export default function EnhancedCarrierCard({
   }
 
   const handleInsuranceUpdate = () => {
-    setShowInsuranceForm(true)
+    setShowInsuranceLookup(true)
   }
 
   const handleInsuranceSuccess = () => {
@@ -245,11 +245,11 @@ export default function EnhancedCarrierCard({
             {safetyConfig.label}
           </span>
           <div className="flex items-center">
-            <InsuranceStatus 
-              key={insuranceKey}
+            <InsuranceStatusWithVoting 
               carrierId={carrier.id} 
               showDetails={false}
               onUpdateClick={handleInsuranceUpdate}
+              refreshTrigger={insuranceKey}
             />
           </div>
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -332,12 +332,14 @@ export default function EnhancedCarrierCard({
         </div>
       </div>
       
-      {/* Insurance Update Form Modal */}
-      {showInsuranceForm && (
-        <InsuranceUpdateForm
+      {/* Insurance Lookup Guide Modal */}
+      {showInsuranceLookup && (
+        <InsuranceLookupGuide
           carrierId={carrier.id}
           carrierName={carrier.legal_name}
-          onClose={() => setShowInsuranceForm(false)}
+          dotNumber={carrier.dot_number}
+          mcNumber={carrier.mc_number}
+          onClose={() => setShowInsuranceLookup(false)}
           onSuccess={handleInsuranceSuccess}
         />
       )}
