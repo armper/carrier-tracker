@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import SafetyRatingTrend from '@/components/SafetyRatingTrend'
-import InsuranceStatus from '@/components/InsuranceStatus'
-import InsuranceUpdateForm from '@/components/InsuranceUpdateForm'
+import InsuranceStatusWithVoting from '@/components/InsuranceStatusWithVoting'
+import InsuranceLookupGuide from '@/components/InsuranceLookupGuide'
 import RateDisplay from '@/components/RateDisplay'
 import RateSubmissionForm from '@/components/RateSubmissionForm'
 import CarrierRatings from '@/components/CarrierRatings'
@@ -46,7 +46,7 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
   })
   const [isSubmittingReport, setIsSubmittingReport] = useState(false)
   const [reportMessage, setReportMessage] = useState('')
-  const [showInsuranceForm, setShowInsuranceForm] = useState(false)
+  const [showInsuranceLookup, setShowInsuranceLookup] = useState(false)
   const [insuranceKey, setInsuranceKey] = useState(0)
   const [showRateForm, setShowRateForm] = useState(false)
   const [rateKey, setRateKey] = useState(0)
@@ -220,8 +220,8 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
     setIsSubmittingReport(false)
   }
 
-  const handleInsuranceUpdate = () => {
-    setShowInsuranceForm(true)
+  const handleInsuranceLookup = () => {
+    setShowInsuranceLookup(true)
   }
 
   const handleInsuranceSuccess = () => {
@@ -379,13 +379,13 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
                 </div>
               </div>
               <button
-                onClick={handleInsuranceUpdate}
+                onClick={handleInsuranceLookup}
                 className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 font-medium"
               >
-                Update Insurance Info
+                Find Current Insurance
               </button>
             </div>
-            <InsuranceStatus 
+            <InsuranceStatusWithVoting 
               carrierId={carrier.id} 
               showDetails={true}
               refreshTrigger={insuranceKey}
@@ -480,7 +480,7 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
             {carrier.entity_type === 'CARRIER' && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Insurance</span>
-                <InsuranceStatus 
+                <InsuranceStatusWithVoting 
                   carrierId={carrier.id} 
                   showDetails={false}
                   refreshTrigger={insuranceKey}
@@ -566,12 +566,14 @@ export default function CarrierDetailClient({ carrier }: CarrierDetailClientProp
         </div>
       )}
       
-      {/* Insurance Update Form Modal - Only for carriers */}
-      {showInsuranceForm && carrier.entity_type === 'CARRIER' && (
-        <InsuranceUpdateForm
+      {/* Insurance Lookup Guide Modal - Only for carriers */}
+      {showInsuranceLookup && carrier.entity_type === 'CARRIER' && (
+        <InsuranceLookupGuide
           carrierId={carrier.id}
           carrierName={carrier.legal_name}
-          onClose={() => setShowInsuranceForm(false)}
+          dotNumber={carrier.dot_number}
+          mcNumber={carrier.mc_number}
+          onClose={() => setShowInsuranceLookup(false)}
           onSuccess={handleInsuranceSuccess}
         />
       )}
