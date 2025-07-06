@@ -6,6 +6,71 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 CarrierTracker is a carrier411 competitor - a transportation carrier monitoring platform built with Next.js 14, Supabase, and Tailwind CSS. The platform allows users to search for transportation carriers, view safety ratings and compliance status, and save carriers to a personal dashboard for monitoring.
 
+## Supabase Backend Documentation
+
+**IMPORTANT**: For any Supabase-related work, authentication, database operations, or API integration, refer to these comprehensive documentation files located in the iOS project directory:
+
+### Core Documentation Files
+
+1. **SUPABASE_SCHEMA.md** - Complete database schema reference
+   - All table structures with columns, types, and constraints
+   - Row Level Security (RLS) policies
+   - Database functions and their usage
+   - Environment variables and connection details
+   - Real-time features and API endpoints
+
+2. **SUPABASE_API_GUIDE.md** - API functions and usage examples
+   - Database functions (user management, carrier operations, insurance, ratings)
+   - Next.js API routes with request/response examples
+   - REST API usage patterns
+   - Error handling and rate limiting
+   - Performance optimization tips
+
+3. **SUPABASE_AUTH_GUIDE.md** - Authentication implementation
+   - Client configuration (browser and server clients)
+   - Middleware protection and session management
+   - User types and admin privileges
+   - Row Level Security policies
+   - Environment variables and security notes
+
+4. **SUPABASE_IOS_GUIDE.md** - iOS-specific integration
+   - Swift Package Manager setup
+   - Authentication flow for iOS
+   - Data models and services
+   - Real-time subscriptions
+   - Error handling and testing
+   - Performance optimization and security
+
+5. **Comments_Integration_Guide.md** - Comments system implementation
+   - Threaded comments with voting
+   - User badges and reputation system
+   - Multiple comment types
+   - Authentication requirements
+   - Components and usage examples
+
+### When to Use These Docs
+
+- **Database Operations**: Check SUPABASE_SCHEMA.md for table structure and RLS policies
+- **API Integration**: Use SUPABASE_API_GUIDE.md for function calls and endpoints
+- **Authentication Issues**: Refer to SUPABASE_AUTH_GUIDE.md for auth flow and troubleshooting
+- **iOS Development**: Follow SUPABASE_IOS_GUIDE.md for Swift implementation patterns
+- **Comments Features**: Use Comments_Integration_Guide.md for comment system integration
+
+### Quick Reference
+
+```bash
+# Access the documentation files
+cd CarrierTracker-iOS/
+ls *.md
+
+# Key connection details are in SUPABASE_SCHEMA.md
+# API examples are in SUPABASE_API_GUIDE.md
+# Auth patterns are in SUPABASE_AUTH_GUIDE.md
+# iOS code examples are in SUPABASE_IOS_GUIDE.md
+```
+
+These files contain the definitive information about the backend implementation, including code examples, error handling patterns, and best practices. Always check these files before implementing new features or debugging issues.
+
 ## Commands
 
 ### Development

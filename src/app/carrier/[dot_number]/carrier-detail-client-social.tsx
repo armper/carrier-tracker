@@ -170,6 +170,11 @@ export default function CarrierDetailClientSocial({ carrier }: CarrierDetailClie
                     {carrier.mc_number && (
                       <span className="text-sm font-medium text-gray-500">MC: {carrier.mc_number}</span>
                     )}
+                    {carrier.entity_type && (
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                        {carrier.entity_type}
+                      </span>
+                    )}
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSafetyRatingColor(carrier.safety_rating)}`}>
                       {carrier.safety_rating || 'Not Rated'}
                     </span>
@@ -306,6 +311,9 @@ export default function CarrierDetailClientSocial({ carrier }: CarrierDetailClie
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Fleet Info</h4>
                   <div className="space-y-1 text-sm text-gray-600">
+                    {carrier.entity_type && (
+                      <div>Entity Type: <span className="font-medium text-gray-900">{carrier.entity_type}</span></div>
+                    )}
                     {carrier.vehicle_count && (
                       <div>Vehicles: {carrier.vehicle_count}</div>
                     )}
