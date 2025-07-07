@@ -88,3 +88,20 @@ struct SignUpView: View {
         }
     }
 }
+
+#Preview("Sign Up View") {
+    SignUpView()
+        .environmentObject(AuthManager())
+}
+
+#Preview("Dark Mode") {
+    SignUpView()
+        .environmentObject(AuthManager())
+        .preferredColorScheme(.dark)
+}
+
+#Preview("iPad") {
+    SignUpView()
+        .environmentObject(AuthManager())
+        .previewDevice("iPad Pro (12.9-inch) (6th generation)")
+}

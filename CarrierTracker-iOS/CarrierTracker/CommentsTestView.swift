@@ -53,9 +53,13 @@ struct CommentsTestView: View {
     }
 }
 
-struct CommentsTestView_Previews: PreviewProvider {
-    static var previews: some View {
-        CommentsTestView()
-            .environmentObject(AuthManager())
-    }
-} 
+#Preview("Comments Test View") {
+    CommentsTestView()
+        .environmentObject(AuthManager())
+}
+
+#Preview("Dark Mode") {
+    CommentsTestView()
+        .environmentObject(AuthManager())
+        .preferredColorScheme(.dark)
+}

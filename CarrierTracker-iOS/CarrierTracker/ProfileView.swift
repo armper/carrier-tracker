@@ -147,3 +147,28 @@ struct ProfileView: View {
         }
     }
 }
+
+#Preview {
+    ProfileView()
+        .environmentObject(AuthManager())
+}
+
+#Preview("Dark Mode") {
+    ProfileView()
+        .environmentObject(AuthManager())
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Different Devices") {
+    Group {
+        ProfileView()
+            .environmentObject(AuthManager())
+            .previewDevice("iPhone 15")
+            .previewDisplayName("iPhone 15")
+        
+        ProfileView()
+            .environmentObject(AuthManager())
+            .previewDevice("iPhone SE")
+            .previewDisplayName("iPhone SE")
+    }
+}

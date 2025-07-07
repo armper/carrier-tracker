@@ -374,4 +374,38 @@ struct CommentThreadView: View {
     private func handleVote(commentId: String, voteValue: Int) {
         // Implementation of handleVote method
     }
+}
+
+#Preview("Comment Thread") {
+    CommentThreadView(
+        targetType: .carrierGeneral,
+        targetId: "carrier-123",
+        title: "General Discussion",
+        showCommentCount: true,
+        allowComments: true
+    )
+    .environmentObject(AuthManager())
+}
+
+#Preview("Dark Mode") {
+    CommentThreadView(
+        targetType: .rateSubmission,
+        targetId: "carrier-456",
+        title: "Rate Information",
+        showCommentCount: true,
+        allowComments: true
+    )
+    .environmentObject(AuthManager())
+    .preferredColorScheme(.dark)
+}
+
+#Preview("Read Only") {
+    CommentThreadView(
+        targetType: .safetyConcern,
+        targetId: "carrier-789",
+        title: "Safety Concerns",
+        showCommentCount: false,
+        allowComments: false
+    )
+    .environmentObject(AuthManager())
 } 

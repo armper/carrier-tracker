@@ -310,4 +310,125 @@ struct CommentView: View {
         
         isVoting = false
     }
+}
+
+#Preview("Comment View") {
+    let sampleComment = Comment(
+        id: "1",
+        commentText: "This carrier has excellent service and always delivers on time. I've been working with them for over 2 years now.",
+        userId: "user-123",
+        userEmail: "driver@example.com",
+        userReputation: 85,
+        userType: .driver,
+        parentCommentId: nil,
+        replyCount: 3,
+        upvotes: 12,
+        downvotes: 2,
+        isPinned: false,
+        createdAt: Date(),
+        updatedAt: Date(),
+        isAuthor: false,
+        userVote: 0
+    )
+    
+    CommentView(
+        comment: sampleComment,
+        onReply: { commentId in
+            print("Reply to \(commentId)")
+        },
+        onVote: { commentId, vote in
+            print("Vote \(vote) on \(commentId)")
+        }
+    )
+    .padding()
+}
+
+#Preview("Pinned Comment") {
+    let pinnedComment = Comment(
+        id: "2",
+        commentText: "Important notice: This carrier has updated their insurance policy effective immediately.",
+        userId: "user-456",
+        userEmail: "admin@carriertracker.com",
+        userReputation: 95,
+        userType: .carrier,
+        parentCommentId: nil,
+        replyCount: 0,
+        upvotes: 25,
+        downvotes: 0,
+        isPinned: true,
+        createdAt: Date(),
+        updatedAt: Date(),
+        isAuthor: true,
+        userVote: 1
+    )
+    
+    CommentView(
+        comment: pinnedComment,
+        onReply: { commentId in
+            print("Reply to \(commentId)")
+        },
+        onVote: { commentId, vote in
+            print("Vote \(vote) on \(commentId)")
+        }
+    )
+    .padding()
+}
+
+#Preview("Reply Comment") {
+    let replyComment = Comment(
+        id: "3",
+        commentText: "Thanks for the update! Really helpful information.",
+        userId: "user-789",
+        userEmail: "broker@logistics.com",
+        userReputation: 72,
+        userType: .broker,
+        parentCommentId: "2",
+        replyCount: 0,
+        upvotes: 5,
+        downvotes: 0,
+        isPinned: false,
+        createdAt: Date(),
+        updatedAt: Date(),
+        isAuthor: false,
+        userVote: 0
+    )
+    
+    CommentView(
+        comment: replyComment,
+        showReplyButton: false,
+        isReply: true
+    )
+    .padding()
+}
+
+#Preview("Dark Mode") {
+    let sampleComment = Comment(
+        id: "4",
+        commentText: "Great rates and professional service. Highly recommend!",
+        userId: "user-321",
+        userEmail: "shipper@company.com",
+        userReputation: 68,
+        userType: .other,
+        parentCommentId: nil,
+        replyCount: 1,
+        upvotes: 8,
+        downvotes: 1,
+        isPinned: false,
+        createdAt: Date(),
+        updatedAt: Date(),
+        isAuthor: false,
+        userVote: -1
+    )
+    
+    CommentView(
+        comment: sampleComment,
+        onReply: { commentId in
+            print("Reply to \(commentId)")
+        },
+        onVote: { commentId, vote in
+            print("Vote \(vote) on \(commentId)")
+        }
+    )
+    .padding()
+    .preferredColorScheme(.dark)
 } 

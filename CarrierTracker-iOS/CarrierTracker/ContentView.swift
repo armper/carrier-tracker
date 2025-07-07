@@ -16,3 +16,28 @@ struct ContentView: View {
         }
     }
 }
+
+#Preview("Authenticated State") {
+    let authManager = AuthManager()
+    authManager.isAuthenticated = true
+    
+    return ContentView()
+        .environmentObject(authManager)
+}
+
+#Preview("Not Authenticated") {
+    let authManager = AuthManager()
+    authManager.isAuthenticated = false
+    
+    return ContentView()
+        .environmentObject(authManager)
+}
+
+#Preview("Dark Mode") {
+    let authManager = AuthManager()
+    authManager.isAuthenticated = true
+    
+    return ContentView()
+        .environmentObject(authManager)
+        .preferredColorScheme(.dark)
+}

@@ -225,3 +225,20 @@ struct RecentCommentRowView: View {
         .padding(.vertical, 4)
     }
 }
+
+#Preview("Chat View") {
+    ChatView()
+        .environmentObject(AuthManager())
+}
+
+#Preview("Dark Mode") {
+    ChatView()
+        .environmentObject(AuthManager())
+        .preferredColorScheme(.dark)
+}
+
+#Preview("iPad") {
+    ChatView()
+        .environmentObject(AuthManager())
+        .previewDevice("iPad Pro (12.9-inch) (6th generation)")
+}

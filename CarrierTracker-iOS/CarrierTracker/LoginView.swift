@@ -89,3 +89,20 @@ struct LoginView: View {
         }
     }
 }
+
+#Preview("Login View") {
+    LoginView()
+        .environmentObject(AuthManager())
+}
+
+#Preview("Dark Mode") {
+    LoginView()
+        .environmentObject(AuthManager())
+        .preferredColorScheme(.dark)
+}
+
+#Preview("iPad") {
+    LoginView()
+        .environmentObject(AuthManager())
+        .previewDevice("iPad Pro (12.9-inch) (6th generation)")
+}

@@ -120,3 +120,43 @@ struct CarrierRowView: View {
         }
     }
 }
+
+#Preview("Carrier List") {
+    CarrierListView()
+}
+
+#Preview("Dark Mode") {
+    CarrierListView()
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Search Bar") {
+    SearchBar(text: .constant("Sample Search")) {
+        print("Search performed")
+    }
+}
+
+#Preview("Carrier Row") {
+    let sampleCarrier = Carrier(
+        id: "1",
+        dotNumber: "123456",
+        legalName: "Sample Trucking Company",
+        dbaName: "Sample Trucking",
+        physicalAddress: "123 Main St, City, ST 12345",
+        phone: "(555) 123-4567",
+        email: "info@sampletrucking.com",
+        mcNumber: "MC123456",
+        operatingStatus: "Active",
+        outOfServiceDate: nil,
+        safetyRating: "Satisfactory",
+        totalDrivers: 25,
+        totalTrucks: 18,
+        totalTrailers: 45,
+        entityType: "carrier",
+        createdAt: Date(),
+        updatedAt: Date()
+    )
+    
+    CarrierRowView(carrier: sampleCarrier)
+        .padding()
+}

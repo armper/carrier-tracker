@@ -628,3 +628,65 @@ struct InsuranceSubmissionView: View {
         }
     }
 }
+
+#Preview("Detail View with Carrier") {
+    let sampleCarrier = Carrier(
+        id: "1",
+        dotNumber: "123456",
+        legalName: "Sample Trucking Company",
+        dbaName: "Sample Trucking",
+        physicalAddress: "123 Main St, City, ST 12345",
+        phone: "(555) 123-4567",
+        email: "info@sampletrucking.com",
+        mcNumber: "MC123456",
+        operatingStatus: "Active",
+        outOfServiceDate: nil,
+        safetyRating: "Satisfactory",
+        totalDrivers: 25,
+        totalTrucks: 18,
+        totalTrailers: 45,
+        entityType: "carrier",
+        createdAt: Date(),
+        updatedAt: Date()
+    )
+    
+    NavigationView {
+        CarrierDetailView(carrier: sampleCarrier)
+    }
+    .environmentObject(AuthManager())
+}
+
+#Preview("Loading State") {
+    NavigationView {
+        CarrierDetailView(carrierId: "loading-carrier-id")
+    }
+    .environmentObject(AuthManager())
+}
+
+#Preview("Dark Mode") {
+    let sampleCarrier = Carrier(
+        id: "2",
+        dotNumber: "789123",
+        legalName: "Premium Logistics LLC",
+        dbaName: nil,
+        physicalAddress: "456 Commerce Blvd, Metro City, CA 90210",
+        phone: "(555) 987-6543",
+        email: "contact@premiumlogistics.com",
+        mcNumber: "MC789123",
+        operatingStatus: "Active",
+        outOfServiceDate: nil,
+        safetyRating: "Conditional",
+        totalDrivers: 50,
+        totalTrucks: 35,
+        totalTrailers: 85,
+        entityType: "carrier",
+        createdAt: Date(),
+        updatedAt: Date()
+    )
+    
+    NavigationView {
+        CarrierDetailView(carrier: sampleCarrier)
+    }
+    .environmentObject(AuthManager())
+    .preferredColorScheme(.dark)
+}

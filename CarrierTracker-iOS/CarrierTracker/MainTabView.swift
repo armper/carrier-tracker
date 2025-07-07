@@ -23,3 +23,20 @@ struct MainTabView: View {
         }
     }
 }
+
+#Preview("Main Tab View") {
+    MainTabView()
+        .environmentObject(AuthManager())
+}
+
+#Preview("Dark Mode") {
+    MainTabView()
+        .environmentObject(AuthManager())
+        .preferredColorScheme(.dark)
+}
+
+#Preview("iPad") {
+    MainTabView()
+        .environmentObject(AuthManager())
+        .previewDevice("iPad Pro (12.9-inch) (6th generation)")
+}
