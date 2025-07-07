@@ -29,6 +29,7 @@
 		B87D861A2E1AD58000A39669 /* CarrierTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87D86192E1AD58000A39669 /* CarrierTrackerTests.swift */; };
 		B87D86242E1AD58000A39669 /* CarrierTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87D86232E1AD58000A39669 /* CarrierTrackerUITests.swift */; };
 		B87D86262E1AD58000A39669 /* CarrierTrackerUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87D86252E1AD58000A39669 /* CarrierTrackerUITestsLaunchTests.swift */; };
+		B87D86382E1B516100A39669 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = B87D86332E1AD63500A39669 /* Supabase */; };
 		C3803E1987D6EEB259038590 /* CarrierService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EE0A751860BA1C82F77998F /* CarrierService.swift */; };
 		EADFB81F1ABE15AF2283B968 /* CommentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767A8FCFAAE780136245EFF9 /* CommentView.swift */; };
 /* End PBXBuildFile section */
@@ -85,6 +86,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B87D86382E1B516100A39669 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -251,8 +253,9 @@
 		A1234567890ABCE1 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1520;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 1520;
 				TargetAttributes = {
 					B87D86032E1AD57C00A39669 = {
 						CreatedOnToolsVersion = 15.2;
