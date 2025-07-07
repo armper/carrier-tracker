@@ -2,9 +2,6 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject var authManager: AuthManager
-    @State private var savedCarriers: [Carrier] = []
-    @State private var isLoading = false
-    @State private var errorMessage: String?
     
     var body: some View {
         NavigationView {
@@ -12,10 +9,10 @@ struct ProfileView: View {
                 Section("Profile") {
                     HStack {
                         Image(systemName: "person.circle.fill")
-                            .font(.system(size: 40))
+                            .font(.system(size: 50))
                             .foregroundColor(.blue)
                         
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: 6) {
                             if authManager.isLoadingProfile {
                                 Text("Loading profile...")
                                     .font(.headline)
@@ -34,7 +31,11 @@ struct ProfileView: View {
                             if let userType = authManager.profile?.userType {
                                 Text(userType.rawValue.capitalized)
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 2)
+                                    .background(Color.blue.opacity(0.1))
+                                    .foregroundColor(.blue)
+                                    .cornerRadius(4)
                             } else if authManager.user != nil && !authManager.isLoadingProfile {
                                 Text("Profile loading...")
                                     .font(.caption)
@@ -44,88 +45,105 @@ struct ProfileView: View {
                         
                         Spacer()
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 8)
                 }
                 
-                Section("Saved Carriers") {
-                    if isLoading {
-                        ProgressView("Loading saved carriers...")
-                            .padding()
-                    } else if let errorMessage = errorMessage {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Error loading saved carriers")
-                                .font(.headline)
-                                .foregroundColor(.red)
-                            
-                            Text(errorMessage)
+                Section("Account Information") {
+                    HStack {
+                        Image(systemName: "envelope")
+                            .foregroundColor(.secondary)
+                            .frame(width: 20)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Email")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             
-                            Button("Retry") {
-                                Task {
-                                    await loadSavedCarriers()
-                                }
+                            Text(authManager.profile?.email ?? authManager.user?.email ?? "Not available")
+                                .font(.body)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.vertical, 4)
+                    
+                    if let createdAt = authManager.user?.createdAt {
+                        HStack {
+                            Image(systemName: "calendar")
+                                .foregroundColor(.secondary)
+                                .frame(width: 20)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Member Since")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                Text(createdAt.formatted(date: .abbreviated, time: .omitted))
+                                    .font(.body)
                             }
+                            
+                            Spacer()
                         }
                         .padding(.vertical, 4)
-                    } else if savedCarriers.isEmpty {
-                        Text("No saved carriers")
-                            .foregroundColor(.secondary)
-                            .font(.subheadline)
-                    } else {
-                        ForEach(savedCarriers) { carrier in
-                            NavigationLink(destination: CarrierDetailView(carrier: carrier)) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(carrier.legalName)
-                                        .font(.headline)
-                                    
-                                    Text("DOT: \(carrier.dotNumber)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                        }
                     }
                 }
                 
+                Section("Statistics") {
+                    HStack {
+                        Image(systemName: "bookmark.fill")
+                            .foregroundColor(.blue)
+                            .frame(width: 20)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Saved Carriers")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Text("View in Saved tab")
+                                .font(.body)
+                                .foregroundColor(.blue)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                }
+                
                 Section("Settings") {
+                    Button(action: {
+                        // Add settings action later
+                    }) {
+                        HStack {
+                            Image(systemName: "gear")
+                                .foregroundColor(.secondary)
+                                .frame(width: 20)
+                            
+                            Text("App Settings")
+                                .foregroundColor(.primary)
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    
                     Button("Sign Out") {
                         Task {
                             await authManager.signOut()
                         }
                     }
                     .foregroundColor(.red)
+                    .padding(.vertical, 4)
                 }
             }
             .navigationTitle("Profile")
-            .task {
-                await loadSavedCarriers()
-            }
-            .refreshable {
-                await loadSavedCarriers()
-            }
         }
-    }
-    
-    private func loadSavedCarriers() async {
-        guard let userId = authManager.user?.id else { 
-            print("❌ No user ID available for loading saved carriers")
-            return 
-        }
-        
-        isLoading = true
-        errorMessage = nil
-        
-        print("🔄 Loading saved carriers for user: \(userId)")
-        
-        do {
-            savedCarriers = try await CarrierService.shared.getSavedCarriers(userId: userId.uuidString)
-            print("✅ Successfully loaded \(savedCarriers.count) saved carriers")
-        } catch {
-            print("❌ Error loading saved carriers: \(error)")
-            errorMessage = error.localizedDescription
-        }
-        
-        isLoading = false
     }
 }

@@ -1,0 +1,208 @@
+{
+  "" : {
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierTracker-master.dia",
+    "emit-module-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierTracker-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierTracker-master-emit-module.dia",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierTracker-master.swiftdeps"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/GeneratedAssetSymbols~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/AuthManager.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/AuthManager.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/AuthManager.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/AuthManager.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/AuthManager.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/AuthManager.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/AuthManager.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/AuthManager.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/AuthManager~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/Carrier.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Carrier.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Carrier.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Carrier.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Carrier.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Carrier.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Carrier.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Carrier.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Carrier~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/CarrierComment.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierComment.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierComment.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierComment.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierComment.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierComment.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierComment.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierComment.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierComment~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/CarrierDetailView.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierDetailView.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierDetailView.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierDetailView.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierDetailView.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierDetailView.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierDetailView.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierDetailView.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierDetailView~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/CarrierListView.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierListView.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierListView.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierListView.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierListView.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierListView.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierListView.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierListView.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierListView~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/CarrierService.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierService.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierService.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierService.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierService.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierService.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierService.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierService.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierService~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/CarrierTrackerApp.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierTrackerApp.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierTrackerApp.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierTrackerApp.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierTrackerApp.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierTrackerApp.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierTrackerApp.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierTrackerApp.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CarrierTrackerApp~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/ChatView.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ChatView.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ChatView.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ChatView.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ChatView.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ChatView.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ChatView.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ChatView.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ChatView~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/CommentsService.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsService.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsService.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsService.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsService.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsService.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsService.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsService.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsService~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/CommentsTestView.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsTestView.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsTestView.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsTestView.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsTestView.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsTestView.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsTestView.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsTestView.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentsTestView~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/CommentThreadView.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentThreadView.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentThreadView.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentThreadView.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentThreadView.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentThreadView.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentThreadView.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentThreadView.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentThreadView~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/CommentView.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentView.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentView.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentView.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentView.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentView.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentView.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentView.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/CommentView~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/ContentView.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ContentView.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ContentView.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ContentView.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ContentView.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ContentView.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ContentView.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ContentView~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/LoginView.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/LoginView.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/LoginView.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/LoginView.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/LoginView.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/LoginView.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/LoginView.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/LoginView.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/LoginView~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/MainTabView.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/MainTabView.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/MainTabView.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/MainTabView.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/MainTabView.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/MainTabView.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/MainTabView.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/MainTabView.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/MainTabView~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/Profile.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Profile.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Profile.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Profile.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Profile.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Profile.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Profile.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Profile.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/Profile~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/ProfileView.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ProfileView.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ProfileView.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ProfileView.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ProfileView.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ProfileView.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ProfileView.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ProfileView.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/ProfileView~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/SignUpView.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SignUpView.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SignUpView.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SignUpView.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SignUpView.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SignUpView.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SignUpView.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SignUpView.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SignUpView~partial.swiftmodule"
+  },
+  "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/CarrierTracker/SupabaseService.swift" : {
+    "const-values" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SupabaseService.swiftconstvalues",
+    "dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SupabaseService.d",
+    "diagnostics" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SupabaseService.dia",
+    "index-unit-output-path" : "/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SupabaseService.o",
+    "llvm-bc" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SupabaseService.bc",
+    "object" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SupabaseService.o",
+    "swift-dependencies" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SupabaseService.swiftdeps",
+    "swiftmodule" : "/Users/nikaperea/411-app/carrier-tracker/CarrierTracker-iOS/build/CarrierTracker.build/Debug-iphonesimulator/CarrierTracker.build/Objects-normal/x86_64/SupabaseService~partial.swiftmodule"
+  }
+}

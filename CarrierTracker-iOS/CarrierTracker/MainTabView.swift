@@ -5,19 +5,19 @@ struct MainTabView: View {
         TabView {
             CarrierListView()
                 .tabItem {
-                    Image(systemName: "truck.box")
-                    Text("Carriers")
+                    Image(systemName: "magnifyingglass")
+                    Text("Search")
                 }
             
-            ChatView()
+            SavedCarriersView()
                 .tabItem {
-                    Image(systemName: "message")
-                    Text("Chat")
+                    Image(systemName: "bookmark.fill")
+                    Text("Saved")
                 }
             
             ProfileView()
                 .tabItem {
-                    Image(systemName: "person")
+                    Image(systemName: "person.fill")
                     Text("Profile")
                 }
         }

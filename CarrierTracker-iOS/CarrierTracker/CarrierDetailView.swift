@@ -48,17 +48,21 @@ struct CarrierDetailView: View {
                         overviewTabView(displayCarrier)
                             .tag(0)
                         
+                        // Reviews Tab
+                        reviewsTabView
+                            .tag(1)
+                        
                         // Comments Tab
                         commentsTabView
-                            .tag(1)
+                            .tag(2)
                         
                         // Rates Tab
                         ratesTabView
-                            .tag(2)
+                            .tag(3)
                         
                         // Insurance Tab
                         insuranceTabView
-                            .tag(3)
+                            .tag(4)
                     }
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 }
@@ -181,7 +185,7 @@ struct CarrierDetailView: View {
     // MARK: - Tab Navigation
     private var tabNavigationView: some View {
         HStack(spacing: 0) {
-            ForEach(Array(["Overview", "Comments", "Rates", "Insurance"].enumerated()), id: \.offset) { index, title in
+            ForEach(Array(["Overview", "Reviews", "Comments", "Rates", "Insurance"].enumerated()), id: \.offset) { index, title in
                 Button(action: { selectedTab = index }) {
                     VStack(spacing: 4) {
                         Text(title)
@@ -241,18 +245,77 @@ struct CarrierDetailView: View {
         }
     }
     
+    private var reviewsTabView: some View {
+        VStack(spacing: 20) {
+            // Header with star rating display
+            VStack(spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("Reviews & Ratings")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text("Share your experience with this carrier")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                }
+                
+                // Rating summary placeholder
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("4.3")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(.primary)
+                        
+                        HStack {
+                            ForEach(1...5, id: \.self) { star in
+                                Image(systemName: star <= 4 ? "star.fill" : "star")
+                                    .foregroundColor(.yellow)
+                                    .font(.system(size: 16))
+                            }
+                        }
+                        
+                        Text("Based on 23 reviews")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Button("Write Review") {
+                        // Action for writing review
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding()
+                .background(Color(UIColor.secondarySystemBackground))
+                .cornerRadius(12)
+            }
+            
+            Text("Reviews functionality coming soon!")
+                .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .padding()
+    }
+    
     private var commentsTabView: some View {
         VStack(spacing: 0) {
             // Comment Type Filters
             commentTypeSelector
             
-            CommentThreadView(
-                targetType: .carrierGeneral,
-                targetId: carrierId,
-                title: "Discussion",
-                showCommentCount: true,
-                allowComments: true
-            )
+            ScrollView {
+                CommentThreadView(
+                    targetType: .carrierGeneral,
+                    targetId: carrierId,
+                    title: "Discussion",
+                    showCommentCount: true,
+                    allowComments: true
+                )
+            }
         }
     }
     
@@ -284,31 +347,156 @@ struct CarrierDetailView: View {
     }
     
     private var ratesTabView: some View {
-        VStack {
-            Button("Submit Rate Information") {
-                showingRateSubmission = true
+        VStack(spacing: 20) {
+            // Header
+            VStack(spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("Rate Information")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text("Shared by the community")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                }
+                
+                Button("Submit Rate Information") {
+                    showingRateSubmission = true
+                }
+                .buttonStyle(.borderedProminent)
+                .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .padding()
             
-            Text("Rate submissions will appear here")
-                .foregroundColor(.secondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Sample rate display
+            VStack(spacing: 12) {
+                HStack {
+                    Text("Recent Rate Submissions")
+                        .font(.headline)
+                    
+                    Spacer()
+                }
+                
+                VStack(spacing: 8) {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("$2.85/mile")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                            
+                            Text("Chicago to Atlanta • Dry Van")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        VStack(alignment: .trailing) {
+                            Text("Verified")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                            
+                            Text("2 days ago")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(8)
+                }
+            }
+            
+            Spacer()
         }
+        .padding()
     }
     
     private var insuranceTabView: some View {
-        VStack {
-            Button("Submit Insurance Info") {
-                showingInsuranceInfo = true
+        VStack(spacing: 20) {
+            // Header
+            VStack(spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("Insurance Information")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text("Crowdsourced insurance data")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                }
+                
+                // Warning notice
+                HStack {
+                    Image(systemName: "info.circle.fill")
+                        .foregroundColor(.orange)
+                    
+                    Text("This information is user-submitted and may not be current or accurate.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                }
+                .padding()
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(8)
+                
+                Button("Submit Insurance Info") {
+                    showingInsuranceInfo = true
+                }
+                .buttonStyle(.borderedProminent)
+                .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .padding()
             
-            Text("Insurance information will appear here")
-                .foregroundColor(.secondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Sample insurance display
+            VStack(spacing: 12) {
+                HStack {
+                    Text("Insurance Providers")
+                        .font(.headline)
+                    
+                    Spacer()
+                }
+                
+                VStack(spacing: 8) {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("Progressive Commercial")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                            
+                            Text("Liability: $1,000,000 • Cargo: $100,000")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        VStack(alignment: .trailing) {
+                            Text("Active")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                            
+                            Text("85% confidence")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(8)
+                }
+            }
+            
+            Spacer()
         }
+        .padding()
     }
     
     // MARK: - Helper Views
