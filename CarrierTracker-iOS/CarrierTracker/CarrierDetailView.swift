@@ -10,6 +10,7 @@ struct CarrierDetailView: View {
     @State private var selectedTab = 0
     @State private var showingRateSubmission = false
     @State private var showingInsuranceInfo = false
+    @State private var selectedCommentType: CommentType = .carrierRating
     
     @EnvironmentObject var authManager: AuthManager
     @StateObject private var carrierService = CarrierService.shared
@@ -309,9 +310,9 @@ struct CarrierDetailView: View {
             
             ScrollView {
                 CommentThreadView(
-                    targetType: .carrierGeneral,
+                    targetType: selectedCommentType,
                     targetId: carrierId,
-                    title: "Discussion",
+                    title: commentTypeTitle(selectedCommentType),
                     showCommentCount: true,
                     allowComments: true
                 )
@@ -322,7 +323,7 @@ struct CarrierDetailView: View {
     private var commentTypeSelector: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                commentTypeButton("General", type: .carrierGeneral)
+                commentTypeButton("General", type: .carrierRating)
                 commentTypeButton("Safety", type: .safetyConcern)
                 commentTypeButton("Rates", type: .rateSubmission)
                 commentTypeButton("Insurance", type: .insuranceInfo)
@@ -335,14 +336,14 @@ struct CarrierDetailView: View {
     
     private func commentTypeButton(_ title: String, type: CommentType) -> some View {
         Button(title) {
-            // Switch comment type
+            selectedCommentType = type
         }
         .font(.subheadline)
         .fontWeight(.medium)
-        .foregroundColor(.blue)
+        .foregroundColor(selectedCommentType == type ? .white : .blue)
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color.blue.opacity(0.1))
+        .background(selectedCommentType == type ? Color.blue : Color.blue.opacity(0.1))
         .cornerRadius(20)
     }
     
@@ -527,6 +528,21 @@ struct CarrierDetailView: View {
     }
     
     // MARK: - Helper Functions
+    private func commentTypeTitle(_ type: CommentType) -> String {
+        switch type {
+        case .carrierRating:
+            return "General Discussion"
+        case .safetyConcern:
+            return "Safety Concerns"
+        case .rateSubmission:
+            return "Rate Information"
+        case .insuranceInfo:
+            return "Insurance Discussion"
+        case .carrierGeneral:
+            return "General Comments"
+        }
+    }
+    
     private func ratingColor(_ rating: String) -> Color {
         switch rating.lowercased() {
         case "satisfactory":

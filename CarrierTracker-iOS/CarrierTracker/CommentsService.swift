@@ -112,7 +112,7 @@ class CommentsService: ObservableObject {
             var params: [String: String] = [
                 "p_target_type": targetType.rawValue,
                 "p_target_id": targetId,
-                "p_comment_text": commentText
+                "p_comment_text": commentText.trimmingCharacters(in: .whitespacesAndNewlines)
             ]
             
             if let parentCommentId = parentCommentId, !parentCommentId.isEmpty {
@@ -127,14 +127,12 @@ class CommentsService: ObservableObject {
             
             print("Create comment response: \(String(data: response.data, encoding: .utf8) ?? "nil")")
             
-            // The function returns a UUID string, not a full comment object
-            if let responseString = String(data: response.data, encoding: .utf8),
-               responseString.starts(with: "\"") && responseString.hasSuffix("\"") {
-                // Remove quotes from UUID string
-                let commentId = String(responseString.dropFirst().dropLast())
+            // The function returns a UUID string
+            if let responseString = String(data: response.data, encoding: .utf8) {
+                // Remove quotes if present
+                let commentId = responseString.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+                print("Successfully created comment with ID: \(commentId)")
                 return commentId
-            } else if let responseString = String(data: response.data, encoding: .utf8) {
-                return responseString
             } else {
                 throw CommentError.invalidResponse
             }
@@ -146,17 +144,18 @@ class CommentsService: ObservableObject {
     }
     
     // MARK: - Vote on Comment
-    func voteOnComment(commentId: String, voteValue: Int) async throws -> VoteResult {
+    func voteOnComment(commentId: String, voteValue: Int) async throws {
         do {
+            print("Voting on comment: \(commentId) with value: \(voteValue)")
+            
             let response = try await supabase
                 .rpc("vote_on_comment", params: [
                     "p_comment_id": commentId,
-                    "p_vote_value": String(voteValue)
+                    "p_vote_type": String(voteValue)
                 ])
                 .execute()
             
-            let decoder = JSONDecoder()
-            return try decoder.decode(VoteResult.self, from: response.data)
+            print("Vote response: \(String(data: response.data, encoding: .utf8) ?? "nil")")
             
         } catch {
             print("Error voting on comment: \(error)")
@@ -164,58 +163,12 @@ class CommentsService: ObservableObject {
         }
     }
     
-    // MARK: - Global Comments Feed
+    // MARK: - Global Comments Feed (Fallback to regular comments)
     func getGlobalCommentsFeed(limit: Int = 50) async throws -> [Comment] {
-        do {
-            print("Fetching global comments feed with limit: \(limit)")
-            
-            let response = try await supabase
-                .rpc("get_global_comments_feed", params: [
-                    "p_limit": String(limit)
-                ])
-                .execute()
-            
-            print("Global feed response data: \(String(data: response.data, encoding: .utf8) ?? "nil")")
-            
-            let decoder = JSONDecoder()
-            
-            // Set up date decoding strategy
-            decoder.dateDecodingStrategy = .custom { decoder in
-                let container = try decoder.singleValueContainer()
-                let dateString = try container.decode(String.self)
-                
-                // Try PostgreSQL timestamp with timezone format
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXXXX"
-                if let date = dateFormatter.date(from: dateString) {
-                    return date
-                }
-                
-                // Try ISO8601 format with fractional seconds
-                let iso8601Formatter = ISO8601DateFormatter()
-                iso8601Formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                if let date = iso8601Formatter.date(from: dateString) {
-                    return date
-                }
-                
-                // Fallback to basic ISO8601
-                iso8601Formatter.formatOptions = [.withInternetDateTime]
-                if let date = iso8601Formatter.date(from: dateString) {
-                    return date
-                }
-                
-                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateString)")
-            }
-            
-            let comments = try decoder.decode([Comment].self, from: response.data)
-            print("Successfully decoded \(comments.count) global comments")
-            return comments
-            
-        } catch {
-            print("Error fetching global comments: \(error)")
-            // Return empty array instead of throwing to gracefully handle missing function
-            return []
-        }
+        // Since global comments feed doesn't exist, return empty array
+        // The web app doesn't use this feature
+        print("Global comments feed not implemented - returning empty array")
+        return []
     }
     
     // MARK: - Format User Name
