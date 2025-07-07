@@ -16,6 +16,8 @@
 		52647B055B2574C58D799077 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7F6E52E70045453A5D4E712 /* MainTabView.swift */; };
 		65E366273F32B3D266373281 /* CommentsTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA3E9C27C6A9D8895C4C2E4 /* CommentsTestView.swift */; };
 		6B399A4DDDB465C67B5C8F95 /* SignUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47443608DBF3B4D31E8ECB37 /* SignUpView.swift */; };
+		28EF31451A58A8A46CCF0B84 /* SavedCarriersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AFAEAB48B821D605AEFB060 /* SavedCarriersView.swift */; };
+		0EA10C6663FAEF8089BEF527 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 988EAB45908B99D5037CB35C /* HomeView.swift */; };
 		6B41276B90475BE3B619CFB5 /* Carrier.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFBC41EA354F8C4805C26FAD /* Carrier.swift */; };
 		73E90AC22CB28575DE8C1C6E /* CarrierListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E093CBCF09E0E9A77ABAA84E /* CarrierListView.swift */; };
 		8208A0422D314D350A874332 /* CommentThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84378CA2919F83BBC3CBEEE1 /* CommentThreadView.swift */; };
@@ -56,6 +58,8 @@
 		1EBDA59F53E62DD96678DCB5 /* CarrierDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarrierDetailView.swift; sourceTree = "<group>"; };
 		3D6AAEE31A6279A5A3FFCE10 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		47443608DBF3B4D31E8ECB37 /* SignUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpView.swift; sourceTree = "<group>"; };
+		5AFAEAB48B821D605AEFB060 /* SavedCarriersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedCarriersView.swift; sourceTree = "<group>"; };
+		988EAB45908B99D5037CB35C /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		594204DF92D6559DA6F0D9A1 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
 		767A8FCFAAE780136245EFF9 /* CommentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CommentView.swift; path = CarrierTracker/CommentView.swift; sourceTree = "<group>"; };
 		7EE0A751860BA1C82F77998F /* CarrierService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarrierService.swift; sourceTree = "<group>"; };
@@ -148,6 +152,8 @@
 				47443608DBF3B4D31E8ECB37 /* SignUpView.swift */,
 				F7F6E52E70045453A5D4E712 /* MainTabView.swift */,
 				E093CBCF09E0E9A77ABAA84E /* CarrierListView.swift */,
+				5AFAEAB48B821D605AEFB060 /* SavedCarriersView.swift */,
+				988EAB45908B99D5037CB35C /* HomeView.swift */,
 				1EBDA59F53E62DD96678DCB5 /* CarrierDetailView.swift */,
 				3D6AAEE31A6279A5A3FFCE10 /* ChatView.swift */,
 				9D88CC5C9E4DE75EBB887F83 /* ProfileView.swift */,
@@ -343,6 +349,8 @@
 				EADFB81F1ABE15AF2283B968 /* CommentView.swift in Sources */,
 				4DBCEE90D3C0EF65A36865A6 /* CommentsService.swift in Sources */,
 				65E366273F32B3D266373281 /* CommentsTestView.swift in Sources */,
+				28EF31451A58A8A46CCF0B84 /* SavedCarriersView.swift in Sources */,
+				0EA10C6663FAEF8089BEF527 /* HomeView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

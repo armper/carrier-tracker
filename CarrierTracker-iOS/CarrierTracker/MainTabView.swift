@@ -3,16 +3,22 @@ import SwiftUI
 struct MainTabView: View {
     var body: some View {
         TabView {
-            CarrierListView()
+            HomeView()
                 .tabItem {
-                    Image(systemName: "magnifyingglass")
-                    Text("Search")
+                    Image(systemName: "house.fill")
+                    Text("Home")
+                }
+            
+            CommentsTestView()
+                .tabItem {
+                    Image(systemName: "message.fill")
+                    Text("Chat")
                 }
             
             SavedCarriersView()
                 .tabItem {
-                    Image(systemName: "bookmark.fill")
-                    Text("Saved")
+                    Image(systemName: "bell.fill")
+                    Text("Alerts")
                 }
             
             ProfileView()
@@ -21,6 +27,7 @@ struct MainTabView: View {
                     Text("Profile")
                 }
         }
+        .accentColor(.orange)
     }
 }
 
