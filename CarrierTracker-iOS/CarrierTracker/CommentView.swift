@@ -83,11 +83,11 @@ struct CommentView: View {
     // MARK: - Avatar View
     private var avatarView: some View {
         Circle()
-            .fill(Color.blue.opacity(0.7))
-            .frame(width: 40, height: 40)
+            .fill(badgeBackgroundColor.opacity(0.8))
+            .frame(width: 36, height: 36)
             .overlay(
                 Text(commentsService.formatUserName(comment.userEmail, comment.userType).prefix(1).uppercased())
-                    .font(.headline)
+                    .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
             )
@@ -95,14 +95,18 @@ struct CommentView: View {
     
     // MARK: - User Info View
     private var userInfoView: some View {
-        HStack {
+        HStack(spacing: 8) {
             // Username
             Text(commentsService.formatUserName(comment.userEmail, comment.userType))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
             
-            // Author badge
+            // Single user type indicator (emoji only)
+            Text(comment.userType.emoji)
+                .font(.caption)
+            
+            // Author badge (only if user is author)
             if comment.isAuthor {
                 Text("You")
                     .font(.caption)
@@ -114,11 +118,7 @@ struct CommentView: View {
                     .cornerRadius(4)
             }
             
-            // User type badge
-            userTypeBadge
-            
-            // Reputation badge
-            reputationBadge
+            Spacer()
             
             // Timestamp
             Text(commentsService.formatDate(comment.createdAt))
@@ -127,12 +127,10 @@ struct CommentView: View {
             
             // Edited indicator
             if comment.createdAt != comment.updatedAt {
-                Text("(edited)")
+                Text("• edited")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
-            Spacer()
         }
         .padding(.bottom, 4)
     }

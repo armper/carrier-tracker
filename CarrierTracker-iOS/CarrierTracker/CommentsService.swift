@@ -173,11 +173,8 @@ class CommentsService: ObservableObject {
     
     // MARK: - Format User Name
     func formatUserName(_ email: String, _ userType: UserType?) -> String {
-        if let userType = userType {
-            return "\(userType.emoji) \(email.components(separatedBy: "@").first ?? email)"
-        } else {
-            return email.components(separatedBy: "@").first ?? email
-        }
+        // Return clean username without emoji (emoji will be shown in badge)
+        return email.components(separatedBy: "@").first ?? email
     }
     
     // MARK: - Format Date

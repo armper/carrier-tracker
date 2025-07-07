@@ -9,16 +9,16 @@ struct MainTabView: View {
                     Text("Home")
                 }
             
-            CommentsTestView()
+            CarrierListView()
                 .tabItem {
-                    Image(systemName: "message.fill")
-                    Text("Chat")
+                    Image(systemName: "magnifyingglass")
+                    Text("Search")
                 }
             
             SavedCarriersView()
                 .tabItem {
-                    Image(systemName: "bell.fill")
-                    Text("Alerts")
+                    Image(systemName: "heart.fill")
+                    Text("Saved")
                 }
             
             ProfileView()
